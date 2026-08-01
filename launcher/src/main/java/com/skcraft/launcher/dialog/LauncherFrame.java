@@ -27,6 +27,7 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,7 +56,7 @@ public class LauncherFrame extends JFrame {
     private final InstanceTableModel instancesModel;
     private WebpagePanel webView;
     private final JButton launchButton = new JButton(SharedLocale.tr("launcher.launch"));
-    private final JButton refreshButton = new JButton(SharedLocale.tr("launcher.checkForUpdates"));
+    private final JButton websiteButton = new JButton(SharedLocale.tr("launcher.website"));
     private final JButton optionsButton = new JButton(SharedLocale.tr("launcher.options"));
     private final JButton selfUpdateButton = new JButton(SharedLocale.tr("launcher.updateLauncher"));
     private final JCheckBox updateCheck = new JCheckBox(SharedLocale.tr("launcher.downloadUpdates"));
@@ -66,6 +67,7 @@ public class LauncherFrame extends JFrame {
 
     private static final String DISCORD_URL = "https://discord.gg/Gz2rD4hE6F";
     private static final String DONATE_URL = "https://pokeworld.contetops.com/tienda";
+    private static final String WEBSITE_URL = "https://pokeworld.contetops.com";
     private static final String SERVER_HOST = "hour-fiction.gl.joinmc.link";
     private static final int SERVER_PORT = 25565;
     private static final String BACKGROUND_RESOURCE = "background.png";
@@ -152,16 +154,6 @@ public class LauncherFrame extends JFrame {
             }
         });
 
-        refreshButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadInstances();
-                launcher.getUpdateManager().checkForUpdate(LauncherFrame.this);
-                webView.browse(launcher.getNewsURL(), false);
-                refreshOnlineCount();
-            }
-        });
-
         selfUpdateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -185,6 +177,7 @@ public class LauncherFrame extends JFrame {
 
         discordButton.addActionListener(ActionListeners.openURL(discordButton, DISCORD_URL));
         donateButton.addActionListener(ActionListeners.openURL(donateButton, DONATE_URL));
+        websiteButton.addActionListener(ActionListeners.openURL(websiteButton, WEBSITE_URL));
 
         maxMemorySpinner.addChangeListener(e -> {
             Configuration config = launcher.getConfig();
@@ -206,9 +199,10 @@ public class LauncherFrame extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.setOpaque(false);
 
-        JLabel title = new JLabel(SharedLocale.tr("launcher.welcomeTitle"));
-        title.setFont(PixelFont.deriveSize(30f));
-        title.setForeground(Color.WHITE);
+        GlowLabel title = new GlowLabel(SharedLocale.tr("launcher.welcomeTitle"));
+        title.setFont(PixelFont.deriveSize(32f));
+        title.setForeground(new Color(0xd9, 0xb3, 0xff));
+        title.setGlowColor(BRAND_PURPLE);
         title.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
 
         onlineCountLabel.setForeground(new Color(0x3b, 0xa5, 0x5c));
@@ -221,7 +215,8 @@ public class LauncherFrame extends JFrame {
         headerBox.add(onlineCountLabel, BorderLayout.SOUTH);
 
         webView = createNewsPanel();
-        webView.setOpaque(false);
+        webView.setOpaque(true);
+        webView.setBackground(new Color(0x0d, 0x0a, 0x14));
         styleGlassPanel(webView);
 
         panel.add(headerBox, BorderLayout.NORTH);
@@ -256,7 +251,8 @@ public class LauncherFrame extends JFrame {
      */
     private JPanel createDonatePanel() {
         JPanel panel = new JPanel(new MigLayout("insets 10 16 10 16, fillx", "[grow][][][]", "[]"));
-        styleGlassPanel(panel);
+        panel.setOpaque(true);
+        panel.setBackground(new Color(0x18, 0x0c, 0x28));
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(255, 165, 0, 160)),
                 BorderFactory.createEmptyBorder(8, 14, 8, 14)));
@@ -266,7 +262,7 @@ public class LauncherFrame extends JFrame {
         donateTitle.setFont(donateTitle.getFont().deriveFont(Font.BOLD, 15f));
 
         JLabel donateText = new JLabel(SharedLocale.tr("launcher.donateText"));
-        donateText.setForeground(new Color(210, 210, 210));
+        donateText.setForeground(new Color(230, 230, 230));
 
         JPanel textBox = new JPanel();
         textBox.setOpaque(false);
@@ -283,10 +279,10 @@ public class LauncherFrame extends JFrame {
         donateButton.setMargin(new Insets(8, 20, 8, 20));
 
         panel.add(textBox, "growx");
-        panel.add(refreshButton);
+        panel.add(websiteButton);
         panel.add(donateButton);
 
-        styleSecondaryButton(refreshButton);
+        styleSecondaryButton(websiteButton);
         selfUpdateButton.setVisible(launcher.getUpdateManager().getPendingUpdate());
         launcher.getUpdateManager().addPropertyChangeListener(new PropertyChangeListener() {
             @Override
@@ -398,6 +394,10 @@ public class LauncherFrame extends JFrame {
      * arriba del arte en vez de perderse), sacando el look de boton cuadrado
      * de Swing por defecto -- solo queda visible la imagen + texto.
      */
+    private static final Color BUTTON_TEXT_COLOR = new Color(0xff, 0xd7, 0x4d);
+    private static final Color BUTTON_TEXT_HOVER = new Color(0xff, 0xf2, 0xb0);
+    private static final Color BUTTON_TEXT_SHADOW = new Color(30, 10, 45);
+
     private void styleThemedButton(JButton button, String resourceName, int width, int height) {
         Icon icon = SwingHelper.createIcon(Launcher.class, resourceName, width, height);
         button.setIcon(icon);
@@ -406,41 +406,66 @@ public class LauncherFrame extends JFrame {
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
-        button.setForeground(Color.WHITE);
-        button.setFont(PixelFont.deriveSize(17f));
+        button.setForeground(BUTTON_TEXT_COLOR);
+        button.setFont(PixelFont.deriveSize(19f));
         button.setPreferredSize(new Dimension(width, height));
+        // Dibuja el texto con sombra oscura detras para que resalte sobre el
+        // arte del boton en vez de leer plano -- BasicButtonUI es la unica
+        // forma confiable de interceptar el pintado del texto sin perder el
+        // resto del comportamiento normal del boton.
+        button.setUI(new ShadowTextButtonUI());
 
-        // Resalta al pasar el mouse por arriba -- lo unico que podemos hacer
-        // sin pedir un segundo arte de "boton hover", pero se nota.
-        Color idleColor = button.getForeground();
-        Color hoverColor = BRAND_PURPLE.brighter();
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                button.setForeground(hoverColor);
+                button.setForeground(BUTTON_TEXT_HOVER);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                button.setForeground(idleColor);
+                button.setForeground(BUTTON_TEXT_COLOR);
             }
         });
     }
 
     /**
-     * Para los botones que no tienen su propio arte (Buscar actualizaciones,
-     * Actualizar launcher) -- fondo oscuro semitransparente a tono con el
-     * resto en vez del blanco por defecto de Swing (que con texto blanco
-     * quedaba invisible).
+     * ButtonUI minima que pinta el texto dos veces (sombra oscura corrida 2px,
+     * despues el color real encima) para que se lea sobre un fondo con
+     * detalle en vez de perderse. No cambia nada mas del comportamiento del
+     * boton (Basic UI respeta setForeground/setFont normalmente).
+     */
+    private static class ShadowTextButtonUI extends BasicButtonUI {
+        @Override
+        protected void paintText(Graphics g, AbstractButton b, Rectangle textRect, String text) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2.setFont(b.getFont());
+            FontMetrics fm = g2.getFontMetrics();
+            int x = textRect.x + (textRect.width - fm.stringWidth(text)) / 2;
+            int y = textRect.y + fm.getAscent() + (textRect.height - fm.getHeight()) / 2;
+
+            g2.setColor(BUTTON_TEXT_SHADOW);
+            g2.drawString(text, x + 2, y + 2);
+            g2.setColor(b.getForeground());
+            g2.drawString(text, x, y);
+        }
+    }
+
+    /**
+     * Para los botones que no tienen su propio arte (Sitio Web, Actualizar
+     * launcher) -- mismo patron que ya funciona bien en el boton "Donar"
+     * (fondo solido + sin borde pintado + sin focus). Un JButton con un
+     * Border custom (LineBorder, etc.) a veces ignora setBackground en
+     * Windows -- por eso este usa solo margin, sin Border real.
      */
     private void styleSecondaryButton(JButton button) {
         button.setForeground(Color.WHITE);
-        button.setBackground(new Color(40, 25, 55, 230));
+        button.setFont(button.getFont().deriveFont(Font.BOLD, 13f));
+        button.setBackground(BRAND_PURPLE.darker());
         button.setOpaque(true);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(PANEL_BORDER),
-                BorderFactory.createEmptyBorder(4, 10, 4, 10)));
+        button.setBorderPainted(false);
         button.setFocusPainted(false);
+        button.setMargin(new Insets(8, 16, 8, 16));
     }
 
     private void styleTitleBarButton(JButton button) {
@@ -482,6 +507,46 @@ public class LauncherFrame extends JFrame {
                 g.setColor(BRAND_BLACK);
                 g.fillRect(0, 0, getWidth(), getHeight());
             }
+        }
+    }
+
+    /**
+     * JLabel que pinta su texto con un halo/resplandor de color detras
+     * (varias copias desenfocadas en el color de glow, despues el texto
+     * real encima) -- para el titulo grande, que tiene que resaltar arriba
+     * de un fondo con mucho detalle.
+     */
+    private static class GlowLabel extends JLabel {
+        private Color glowColor = BRAND_PURPLE;
+
+        GlowLabel(String text) {
+            super(text);
+        }
+
+        void setGlowColor(Color color) {
+            this.glowColor = color;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2.setFont(getFont());
+            FontMetrics fm = g2.getFontMetrics();
+            Insets insets = getInsets();
+            int x = insets.left;
+            int y = insets.top + fm.getAscent();
+            String text = getText();
+
+            g2.setColor(glowColor);
+            int[][] offsets = {{-2, 0}, {2, 0}, {0, -2}, {0, 2}, {-2, -2}, {2, 2}, {-2, 2}, {2, -2}};
+            for (int[] offset : offsets) {
+                g2.drawString(text, x + offset[0], y + offset[1]);
+            }
+
+            g2.setColor(getForeground());
+            g2.drawString(text, x, y);
+            g2.dispose();
         }
     }
 
