@@ -16,6 +16,7 @@ import com.skcraft.launcher.launch.LaunchOptions;
 import com.skcraft.launcher.launch.LaunchOptions.UpdatePolicy;
 import com.skcraft.launcher.persistence.Persistence;
 import com.skcraft.launcher.swing.*;
+import com.skcraft.launcher.util.ServerStatusPinger;
 import com.skcraft.launcher.util.SharedLocale;
 import com.skcraft.launcher.util.SwingExecutor;
 import lombok.Getter;
@@ -29,7 +30,11 @@ import javax.swing.event.TableModelListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.geom.RoundRectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -48,20 +53,33 @@ public class LauncherFrame extends JFrame {
     @Getter
     private final InstanceTable instancesTable = new InstanceTable();
     private final InstanceTableModel instancesModel;
-    @Getter
-    private final JScrollPane instanceScroll = new JScrollPane(instancesTable);
     private WebpagePanel webView;
-    private JSplitPane splitPane;
     private final JButton launchButton = new JButton(SharedLocale.tr("launcher.launch"));
     private final JButton refreshButton = new JButton(SharedLocale.tr("launcher.checkForUpdates"));
     private final JButton optionsButton = new JButton(SharedLocale.tr("launcher.options"));
     private final JButton selfUpdateButton = new JButton(SharedLocale.tr("launcher.updateLauncher"));
     private final JCheckBox updateCheck = new JCheckBox(SharedLocale.tr("launcher.downloadUpdates"));
     private final JButton discordButton = new JButton(SharedLocale.tr("launcher.discord"));
+    private final JButton donateButton = new JButton(SharedLocale.tr("launcher.donate"));
     private final JSpinner maxMemorySpinner = new JSpinner(new SpinnerNumberModel(2048, 512, 32768, 512));
+    private final JLabel onlineCountLabel = new JLabel(" ");
 
     private static final String DISCORD_URL = "https://discord.gg/Gz2rD4hE6F";
-    private static final String BACKGROUND_RESOURCE = "background.jpg";
+    private static final String DONATE_URL = "https://pokeworld.contetops.com/tienda";
+    private static final String SERVER_HOST = "hour-fiction.gl.joinmc.link";
+    private static final int SERVER_PORT = 25565;
+    private static final String BACKGROUND_RESOURCE = "background.png";
+    private static final int CORNER_RADIUS = 24;
+
+    /** Morado de marca real de la web (pokeworld.contetops.com), no un aproximado. */
+    private static final Color BRAND_PURPLE = new Color(0xa2, 0x59, 0xff);
+    private static final Color BRAND_BLACK = new Color(0x0a, 0x0a, 0x0c);
+    private static final Color PANEL_BG = new Color(10, 8, 14, 210);
+    private static final Color PANEL_BORDER = new Color(120, 80, 190);
+
+    private final JButton closeButton = new JButton("✕");
+    private final JButton minimizeButton = new JButton("–");
+    private Point dragOffset;
 
     /**
      * Create a new frame.
@@ -74,11 +92,14 @@ public class LauncherFrame extends JFrame {
         this.launcher = launcher;
         instancesModel = new InstanceTableModel(launcher.getInstances());
 
+        setUndecorated(true);
+        setResizable(false);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(400, 300));
         initComponents();
         pack();
         setLocationRelativeTo(null);
+        setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS));
 
         SwingHelper.setFrameIcon(this, Launcher.class, "icon.png");
 
@@ -88,47 +109,24 @@ public class LauncherFrame extends JFrame {
                 loadInstances();
             }
         });
+
+        refreshOnlineCount();
     }
 
     private void initComponents() {
         JPanel container = createContainerPanel();
-        container.setLayout(new MigLayout("fill, insets dialog", "[][]push[][]", "[grow][]"));
+        container.setLayout(new MigLayout("fill, insets dialog", "[grow][]", "[]0[grow][]"));
 
-        webView = createNewsPanel();
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, instanceScroll, webView);
-        selfUpdateButton.setVisible(launcher.getUpdateManager().getPendingUpdate());
+        JPanel titleBar = createTitleBar();
+        container.add(titleBar, "growx, wrap, span 2, gapbottom unrel");
 
-        launcher.getUpdateManager().addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (evt.getPropertyName().equals("pendingUpdate")) {
-                    selfUpdateButton.setVisible((Boolean) evt.getNewValue());
+        JPanel descriptionPanel = createDescriptionPanel();
+        JPanel buttonColumn = createButtonColumn();
+        container.add(descriptionPanel, "grow, w null:760");
+        container.add(buttonColumn, "growy, wrap, top");
 
-                }
-            }
-        });
-
-        updateCheck.setSelected(true);
-        instancesTable.setModel(instancesModel);
-        launchButton.setFont(launchButton.getFont().deriveFont(Font.BOLD));
-        splitPane.setDividerLocation(200);
-        splitPane.setDividerSize(4);
-        splitPane.setOpaque(false);
-        container.add(splitPane, "grow, wrap, span 6, gapbottom unrel, w null:680, h null:350");
-        SwingHelper.flattenJSplitPane(splitPane);
-
-        maxMemorySpinner.setToolTipText(SharedLocale.tr("launcher.maxMemoryTooltip"));
-        maxMemorySpinner.setValue(launcher.getConfig().getMaxMemory());
-        ((JSpinner.DefaultEditor) maxMemorySpinner.getEditor()).getTextField().setColumns(4);
-
-        container.add(discordButton);
-        container.add(refreshButton);
-        container.add(updateCheck);
-        container.add(selfUpdateButton);
-        container.add(new JLabel(SharedLocale.tr("launcher.maxMemoryLabel")), "split 2");
-        container.add(maxMemorySpinner);
-        container.add(optionsButton);
-        container.add(launchButton);
+        JPanel donatePanel = createDonatePanel();
+        container.add(donatePanel, "growx, span 2");
 
         add(container, BorderLayout.CENTER);
 
@@ -141,14 +139,13 @@ public class LauncherFrame extends JFrame {
             }
         });
 
-        instancesTable.addMouseListener(new DoubleClickToButtonAdapter(launchButton));
-
         refreshButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 loadInstances();
                 launcher.getUpdateManager().checkForUpdate(LauncherFrame.this);
                 webView.browse(launcher.getNewsURL(), false);
+                refreshOnlineCount();
             }
         });
 
@@ -174,29 +171,255 @@ public class LauncherFrame extends JFrame {
         });
 
         discordButton.addActionListener(ActionListeners.openURL(discordButton, DISCORD_URL));
+        donateButton.addActionListener(ActionListeners.openURL(donateButton, DONATE_URL));
 
         maxMemorySpinner.addChangeListener(e -> {
             Configuration config = launcher.getConfig();
             config.setMaxMemory((Integer) maxMemorySpinner.getValue());
             Persistence.commitAndForget(config);
         });
-
-        instancesTable.addMouseListener(new PopupMouseAdapter() {
-            @Override
-            protected void showPopup(MouseEvent e) {
-                int index = instancesTable.rowAtPoint(e.getPoint());
-                Instance selected = null;
-                if (index >= 0) {
-                    instancesTable.setRowSelectionInterval(index, index);
-                    selected = launcher.getInstances().get(index);
-                }
-                popupInstanceMenu(e.getComponent(), e.getX(), e.getY(), selected);
-            }
-        });
     }
 
     protected JPanel createContainerPanel() {
         return new BackgroundPanel();
+    }
+
+    /**
+     * Panel central: titulo grande en fuente pixel + descripcion/eventos
+     * reales del server, reemplaza la vieja lista de instancias (con un solo
+     * modpack no hacia falta un selector).
+     */
+    private JPanel createDescriptionPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
+        panel.setOpaque(false);
+
+        JLabel title = new JLabel(SharedLocale.tr("launcher.welcomeTitle"));
+        title.setFont(PixelFont.deriveSize(30f));
+        title.setForeground(Color.WHITE);
+        title.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+
+        onlineCountLabel.setForeground(new Color(0x3b, 0xa5, 0x5c));
+        onlineCountLabel.setFont(onlineCountLabel.getFont().deriveFont(Font.BOLD, 12f));
+        onlineCountLabel.setBorder(BorderFactory.createEmptyBorder(0, 6, 6, 6));
+
+        JPanel headerBox = new JPanel(new BorderLayout());
+        headerBox.setOpaque(false);
+        headerBox.add(title, BorderLayout.NORTH);
+        headerBox.add(onlineCountLabel, BorderLayout.SOUTH);
+
+        webView = createNewsPanel();
+        webView.setOpaque(false);
+        styleGlassPanel(webView);
+
+        panel.add(headerBox, BorderLayout.NORTH);
+        panel.add(webView, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    /**
+     * Columna vertical de botones grandes a la derecha (Discord, Opciones,
+     * Jugar), en vez de la fila chica de antes.
+     */
+    private JPanel createButtonColumn() {
+        JPanel column = new JPanel();
+        column.setOpaque(false);
+        column.setLayout(new MigLayout("insets 6, gap 12", "[]", "[][][]push"));
+
+        styleThemedButton(discordButton, "btn_discord.png", 210, 113);
+        styleThemedButton(optionsButton, "btn_options.png", 210, 122);
+        styleThemedButton(launchButton, "btn_play.png", 230, 107);
+
+        column.add(discordButton, "wrap, align center");
+        column.add(optionsButton, "wrap, align center");
+        column.add(launchButton, "wrap, align center");
+
+        return column;
+    }
+
+    /**
+     * Franja inferior de donaciones -- llamativa, con boton directo a la
+     * tienda de Tebex.
+     */
+    private JPanel createDonatePanel() {
+        JPanel panel = new JPanel(new MigLayout("insets 10 16 10 16, fillx", "[grow][][][]", "[]"));
+        styleGlassPanel(panel);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 165, 0, 160)),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+
+        JLabel donateTitle = new JLabel(SharedLocale.tr("launcher.donateTitle"));
+        donateTitle.setForeground(Color.ORANGE);
+        donateTitle.setFont(donateTitle.getFont().deriveFont(Font.BOLD, 15f));
+
+        JLabel donateText = new JLabel(SharedLocale.tr("launcher.donateText"));
+        donateText.setForeground(new Color(210, 210, 210));
+
+        JPanel textBox = new JPanel();
+        textBox.setOpaque(false);
+        textBox.setLayout(new BoxLayout(textBox, BoxLayout.Y_AXIS));
+        textBox.add(donateTitle);
+        textBox.add(donateText);
+
+        donateButton.setFont(donateButton.getFont().deriveFont(Font.BOLD, 13f));
+        donateButton.setBackground(Color.ORANGE);
+        donateButton.setForeground(Color.BLACK);
+        donateButton.setOpaque(true);
+        donateButton.setBorderPainted(false);
+        donateButton.setFocusPainted(false);
+        donateButton.setMargin(new Insets(8, 20, 8, 20));
+
+        panel.add(textBox, "growx");
+        panel.add(refreshButton);
+        panel.add(donateButton);
+
+        styleSecondaryButton(refreshButton);
+        selfUpdateButton.setVisible(launcher.getUpdateManager().getPendingUpdate());
+        launcher.getUpdateManager().addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName().equals("pendingUpdate")) {
+                    selfUpdateButton.setVisible((Boolean) evt.getNewValue());
+                }
+            }
+        });
+        styleSecondaryButton(selfUpdateButton);
+        updateCheck.setSelected(true);
+        updateCheck.setForeground(Color.WHITE);
+        updateCheck.setOpaque(false);
+        maxMemorySpinner.setToolTipText(SharedLocale.tr("launcher.maxMemoryTooltip"));
+        maxMemorySpinner.setValue(launcher.getConfig().getMaxMemory());
+        ((JSpinner.DefaultEditor) maxMemorySpinner.getEditor()).getTextField().setColumns(4);
+        JLabel maxMemoryLabel = new JLabel(SharedLocale.tr("launcher.maxMemoryLabel"));
+        maxMemoryLabel.setForeground(Color.WHITE);
+
+        JPanel secondaryRow = new JPanel();
+        secondaryRow.setOpaque(false);
+        secondaryRow.setLayout(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        secondaryRow.add(updateCheck);
+        secondaryRow.add(selfUpdateButton);
+        secondaryRow.add(maxMemoryLabel);
+        secondaryRow.add(maxMemorySpinner);
+        panel.add(secondaryRow, "newline, span 4, growx");
+
+        instancesTable.setModel(instancesModel);
+
+        return panel;
+    }
+
+    private void styleGlassPanel(JComponent c) {
+        c.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PANEL_BORDER),
+                BorderFactory.createEmptyBorder(6, 6, 6, 6)));
+    }
+
+    /**
+     * Consulta cuantos jugadores hay online ahora mismo (server list ping) y
+     * lo muestra -- si falla (red, timeout, etc.) simplemente no muestra
+     * nada, no rompe la interfaz.
+     */
+    private void refreshOnlineCount() {
+        onlineCountLabel.setText(" ");
+        new Thread(() -> {
+            ServerStatusPinger.Status status = ServerStatusPinger.ping(SERVER_HOST, SERVER_PORT, 4000);
+            if (status != null && status.getOnline() >= 0) {
+                String text = SharedLocale.tr("launcher.onlineCount", status.getOnline());
+                SwingUtilities.invokeLater(() -> onlineCountLabel.setText(text));
+            }
+        }, "online-count-ping").start();
+    }
+
+    /**
+     * Barra de titulo propia -- como la ventana no tiene marco nativo (para
+     * poder tener esquinas redondeadas), hay que reimplementar a mano el
+     * arrastre de la ventana y los botones de minimizar/cerrar.
+     */
+    private JPanel createTitleBar() {
+        JPanel titleBar = new JPanel(new BorderLayout());
+        titleBar.setOpaque(false);
+
+        JLabel titleLabel = new JLabel(SharedLocale.tr("launcher.appTitle"));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 13f));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 0));
+
+        styleTitleBarButton(minimizeButton);
+        styleTitleBarButton(closeButton);
+
+        JPanel windowButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
+        windowButtons.setOpaque(false);
+        windowButtons.add(minimizeButton);
+        windowButtons.add(closeButton);
+
+        titleBar.add(titleLabel, BorderLayout.WEST);
+        titleBar.add(windowButtons, BorderLayout.EAST);
+
+        minimizeButton.addActionListener(e -> setState(Frame.ICONIFIED));
+        closeButton.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
+
+        MouseAdapter dragListener = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                dragOffset = e.getPoint();
+            }
+        };
+        MouseMotionAdapter dragMotionListener = new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (dragOffset == null) return;
+                Point current = getLocation();
+                setLocation(current.x + e.getX() - dragOffset.x, current.y + e.getY() - dragOffset.y);
+            }
+        };
+        titleBar.addMouseListener(dragListener);
+        titleBar.addMouseMotionListener(dragMotionListener);
+        titleLabel.addMouseListener(dragListener);
+        titleLabel.addMouseMotionListener(dragMotionListener);
+
+        return titleBar;
+    }
+
+    /**
+     * Le pone a un boton el marco/arte propio como icono (recortado del sheet
+     * que armamos) y el texto centrado encima, sacando el look de boton
+     * cuadrado de Swing por defecto -- solo queda visible la imagen.
+     */
+    private void styleThemedButton(JButton button, String resourceName, int width, int height) {
+        Icon icon = SwingHelper.createIcon(Launcher.class, resourceName, width, height);
+        button.setIcon(icon);
+        button.setHorizontalTextPosition(SwingConstants.CENTER);
+        button.setVerticalTextPosition(SwingConstants.CENTER);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setForeground(Color.WHITE);
+        button.setFont(PixelFont.deriveSize(15f));
+        button.setPreferredSize(new Dimension(width, height));
+    }
+
+    /**
+     * Para los botones que no tienen su propio arte (Buscar actualizaciones,
+     * Actualizar launcher) -- fondo oscuro semitransparente a tono con el
+     * resto en vez del blanco por defecto de Swing (que con texto blanco
+     * quedaba invisible).
+     */
+    private void styleSecondaryButton(JButton button) {
+        button.setForeground(Color.WHITE);
+        button.setBackground(new Color(40, 25, 55, 230));
+        button.setOpaque(true);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PANEL_BORDER),
+                BorderFactory.createEmptyBorder(4, 10, 4, 10)));
+        button.setFocusPainted(false);
+    }
+
+    private void styleTitleBarButton(JButton button) {
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setForeground(Color.WHITE);
+        button.setFont(button.getFont().deriveFont(Font.BOLD, 12f));
+        button.setMargin(new Insets(2, 8, 2, 8));
     }
 
     /**
@@ -226,7 +449,8 @@ public class LauncherFrame extends JFrame {
             if (background != null) {
                 g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
             } else {
-                super.paintComponent(g);
+                g.setColor(BRAND_BLACK);
+                g.fillRect(0, 0, getWidth(), getHeight());
             }
         }
     }
@@ -238,118 +462,6 @@ public class LauncherFrame extends JFrame {
      */
     protected WebpagePanel createNewsPanel() {
         return WebpagePanel.forURL(launcher.getNewsURL(), false);
-    }
-
-    /**
-     * Popup the menu for the instances.
-     *
-     * @param component the component
-     * @param x mouse X
-     * @param y mouse Y
-     * @param selected the selected instance, possibly null
-     */
-    private void popupInstanceMenu(Component component, int x, int y, final Instance selected) {
-        JPopupMenu popup = new JPopupMenu();
-        JMenuItem menuItem;
-
-        if (selected != null) {
-            menuItem = new JMenuItem(!selected.isLocal() ? tr("instance.install") : tr("instance.launch"));
-            menuItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    launch();
-                }
-            });
-            popup.add(menuItem);
-
-            if (selected.isLocal()) {
-                popup.addSeparator();
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.openFolder"));
-                menuItem.addActionListener(ActionListeners.browseDir(
-                        LauncherFrame.this, selected.getContentDir(), true));
-                popup.add(menuItem);
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.openSaves"));
-                menuItem.addActionListener(ActionListeners.browseDir(
-                        LauncherFrame.this, new File(selected.getContentDir(), "saves"), true));
-                popup.add(menuItem);
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.openResourcePacks"));
-                menuItem.addActionListener(ActionListeners.browseDir(
-                        LauncherFrame.this, new File(selected.getContentDir(), "resourcepacks"), true));
-                popup.add(menuItem);
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.openScreenshots"));
-                menuItem.addActionListener(ActionListeners.browseDir(
-                        LauncherFrame.this, new File(selected.getContentDir(), "screenshots"), true));
-                popup.add(menuItem);
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.copyAsPath"));
-                menuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        File dir = selected.getContentDir();
-                        dir.mkdirs();
-                        SwingHelper.setClipboard(dir.getAbsolutePath());
-                    }
-                });
-                popup.add(menuItem);
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.openSettings"));
-                menuItem.addActionListener(e -> {
-                    InstanceSettingsDialog.open(this, selected);
-                });
-                popup.add(menuItem);
-
-                popup.addSeparator();
-
-                if (!selected.isUpdatePending()) {
-                    menuItem = new JMenuItem(SharedLocale.tr("instance.forceUpdate"));
-                    menuItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            selected.setUpdatePending(true);
-                            launch();
-                            instancesModel.update();
-                        }
-                    });
-                    popup.add(menuItem);
-                }
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.hardForceUpdate"));
-                menuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        confirmHardUpdate(selected);
-                    }
-                });
-                popup.add(menuItem);
-
-                menuItem = new JMenuItem(SharedLocale.tr("instance.deleteFiles"));
-                menuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        confirmDelete(selected);
-                    }
-                });
-                popup.add(menuItem);
-            }
-
-            popup.addSeparator();
-        }
-
-        menuItem = new JMenuItem(SharedLocale.tr("launcher.refreshList"));
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadInstances();
-            }
-        });
-        popup.add(menuItem);
-
-        popup.show(component, x, y);
-
     }
 
     private void confirmDelete(Instance instance) {
@@ -411,7 +523,14 @@ public class LauncherFrame extends JFrame {
 
     private void launch() {
         boolean permitUpdate = updateCheck.isSelected();
-        Instance instance = launcher.getInstances().get(instancesTable.getSelectedRow());
+
+        if (launcher.getInstances().size() == 0) {
+            SwingHelper.showErrorDialog(this, SharedLocale.tr("launcher.noInstanceError"), SharedLocale.tr("launcher.noInstanceTitle"));
+            return;
+        }
+
+        int row = instancesTable.getSelectedRow();
+        Instance instance = launcher.getInstances().get(row >= 0 ? row : 0);
 
         LaunchOptions options = new LaunchOptions.Builder()
                 .setInstance(instance)
