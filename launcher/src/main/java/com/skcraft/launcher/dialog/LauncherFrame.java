@@ -201,8 +201,8 @@ public class LauncherFrame extends JFrame {
 
         GlowLabel title = new GlowLabel(SharedLocale.tr("launcher.welcomeTitle"));
         title.setFont(PixelFont.deriveSize(32f));
-        title.setForeground(new Color(0xd9, 0xb3, 0xff));
-        title.setGlowColor(BRAND_PURPLE);
+        title.setForeground(new Color(0xf0, 0xe0, 0xff));
+        title.setGlowColor(new Color(0xc7, 0x3d, 0xff));
         title.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
 
         onlineCountLabel.setForeground(new Color(0x3b, 0xa5, 0x5c));
@@ -473,8 +473,11 @@ public class LauncherFrame extends JFrame {
             // Centrado contra el boton entero, no contra el textRect que calcula
             // BasicButtonUI en base al layout de icono+texto -- con icono y texto
             // los dos en CENTER ese calculo queda corrido, esto es mas confiable.
+            // El 0.60 (en vez de 0.5) es porque la "placa" vacia del arte del
+            // boton no esta en el medio exacto de la imagen -- el Pokemon
+            // ocupa el tercio de arriba, la placa esta mas abajo.
             int x = (b.getWidth() - fm.stringWidth(text)) / 2;
-            int y = b.getHeight() / 2 + fm.getAscent() / 2 - fm.getDescent() / 2;
+            int y = (int) (b.getHeight() * 0.60) + fm.getAscent() / 2 - fm.getDescent() / 2;
 
             g2.setColor(BUTTON_TEXT_SHADOW);
             for (int dx = -1; dx <= 1; dx++) {
@@ -579,10 +582,17 @@ public class LauncherFrame extends JFrame {
             int y = insets.top + fm.getAscent();
             String text = getText();
 
-            g2.setColor(glowColor);
-            int[][] offsets = {{-2, 0}, {2, 0}, {0, -2}, {0, 2}, {-2, -2}, {2, 2}, {-2, 2}, {2, -2}};
-            for (int[] offset : offsets) {
-                g2.drawString(text, x + offset[0], y + offset[1]);
+            // Halo tipo neon -- varias pasadas a distinto radio, mas tenue
+            // cuanto mas lejos, para que se vea como un resplandor real en
+            // vez de un contorno duro.
+            for (int radius = 5; radius >= 1; radius--) {
+                int alpha = Math.max(30, 200 - radius * 35);
+                g2.setColor(new Color(glowColor.getRed(), glowColor.getGreen(), glowColor.getBlue(), alpha));
+                for (double angle = 0; angle < 360; angle += 45) {
+                    int dx = (int) Math.round(radius * Math.cos(Math.toRadians(angle)));
+                    int dy = (int) Math.round(radius * Math.sin(Math.toRadians(angle)));
+                    g2.drawString(text, x + dx, y + dy);
+                }
             }
 
             g2.setColor(getForeground());
