@@ -46,6 +46,7 @@ public class AccountSelectDialog extends JDialog {
 		setResizable(false);
 		pack();
 		setLocationRelativeTo(owner);
+		com.skcraft.launcher.swing.DialogTheme.apply(this);
 	}
 
 	private void initComponents() {

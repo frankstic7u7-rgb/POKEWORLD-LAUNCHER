@@ -57,6 +57,7 @@ public class ProgressDialog extends JDialog {
         defaultMessage = message;
         setCompactSize();
         setLocationRelativeTo(owner);
+        com.skcraft.launcher.swing.DialogTheme.apply(this);
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {

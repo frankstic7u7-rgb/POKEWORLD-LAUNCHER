@@ -90,6 +90,7 @@ public class ConfigurationDialog extends JDialog {
         setSize(new Dimension(400, 500));
         setResizable(false);
         setLocationRelativeTo(owner);
+        com.skcraft.launcher.swing.DialogTheme.apply(this);
 
         mapper.map(jvmArgsText, "jvmArgs");
         mapper.map(minMemorySpinner, "minMemory");

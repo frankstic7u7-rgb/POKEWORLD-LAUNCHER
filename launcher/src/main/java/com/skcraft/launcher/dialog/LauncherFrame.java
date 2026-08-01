@@ -196,8 +196,8 @@ public class LauncherFrame extends JFrame {
      * modpack no hacia falta un selector).
      */
     private JPanel createDescriptionPanel() {
-        JPanel panel = new JPanel(new BorderLayout(0, 8));
-        panel.setOpaque(false);
+        JPanel panel = new DescriptionBackgroundPanel();
+        panel.setLayout(new BorderLayout(0, 8));
 
         GlowLabel title = new GlowLabel(SharedLocale.tr("launcher.welcomeTitle"));
         title.setFont(PixelFont.deriveSize(32f));
@@ -215,14 +215,41 @@ public class LauncherFrame extends JFrame {
         headerBox.add(onlineCountLabel, BorderLayout.SOUTH);
 
         webView = createNewsPanel();
-        webView.setOpaque(true);
-        webView.setBackground(new Color(0x0d, 0x0a, 0x14));
+        webView.setOpaque(false);
         styleGlassPanel(webView);
 
         panel.add(headerBox, BorderLayout.NORTH);
         panel.add(webView, BorderLayout.CENTER);
 
         return panel;
+    }
+
+    /**
+     * Panel del centro con la imagen de Mewtwo/eventos de fondo (la que
+     * mando el usuario), atras del titulo y del panel de noticias -- que el
+     * HTML tenga fondo semitransparente en vez de solido es lo que deja ver
+     * esta imagen sin perder la lectura del texto.
+     */
+    private static class DescriptionBackgroundPanel extends JPanel {
+        private final Image background;
+
+        DescriptionBackgroundPanel() {
+            setOpaque(true);
+            java.net.URL url = Launcher.class.getResource("description_bg.jpg");
+            background = url != null ? new ImageIcon(url).getImage() : null;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            if (background != null) {
+                g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
+                g.setColor(new Color(10, 6, 18, 90));
+                g.fillRect(0, 0, getWidth(), getHeight());
+            } else {
+                g.setColor(BRAND_BLACK);
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        }
     }
 
     /**
@@ -401,13 +428,15 @@ public class LauncherFrame extends JFrame {
     private void styleThemedButton(JButton button, String resourceName, int width, int height) {
         Icon icon = SwingHelper.createIcon(Launcher.class, resourceName, width, height);
         button.setIcon(icon);
+        button.setText(button.getText().toUpperCase());
         button.setHorizontalTextPosition(SwingConstants.CENTER);
         button.setVerticalTextPosition(SwingConstants.CENTER);
+        button.setIconTextGap(0);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setForeground(BUTTON_TEXT_COLOR);
-        button.setFont(PixelFont.deriveSize(19f));
+        button.setFont(PixelFont.deriveSize(21f));
         button.setPreferredSize(new Dimension(width, height));
         // Dibuja el texto con sombra oscura detras para que resalte sobre el
         // arte del boton en vez de leer plano -- BasicButtonUI es la unica
@@ -441,13 +470,25 @@ public class LauncherFrame extends JFrame {
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             g2.setFont(b.getFont());
             FontMetrics fm = g2.getFontMetrics();
-            int x = textRect.x + (textRect.width - fm.stringWidth(text)) / 2;
-            int y = textRect.y + fm.getAscent() + (textRect.height - fm.getHeight()) / 2;
+            // Centrado contra el boton entero, no contra el textRect que calcula
+            // BasicButtonUI en base al layout de icono+texto -- con icono y texto
+            // los dos en CENTER ese calculo queda corrido, esto es mas confiable.
+            int x = (b.getWidth() - fm.stringWidth(text)) / 2;
+            int y = b.getHeight() / 2 + fm.getAscent() / 2 - fm.getDescent() / 2;
 
             g2.setColor(BUTTON_TEXT_SHADOW);
-            g2.drawString(text, x + 2, y + 2);
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) continue;
+                    g2.drawString(text, x + dx + 2, y + dy + 2);
+                }
+            }
+            // "Negrita" falsa -- Monocraft solo trae un peso -- dibujando el
+            // texto real varias veces con 1px de corrimiento se ve mas grueso.
             g2.setColor(b.getForeground());
             g2.drawString(text, x, y);
+            g2.drawString(text, x + 1, y);
+            g2.drawString(text, x, y + 1);
         }
     }
 
