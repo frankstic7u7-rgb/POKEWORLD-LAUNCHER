@@ -156,3 +156,7 @@ $RECYCLE.BIN/
 /versions
 /accounts.dat
 /config.json
+# Carpetas de trabajo local para armar el modpack (no se commitean, son insumo/salida del builder)
+/build_project/
+/build_project_output/
+/feed_staging/

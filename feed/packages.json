@@ -1,0 +1,12 @@
+{
+    "minimumVersion": 1,
+    "packages": [
+        {
+            "name": "pokeworld",
+            "title": "PokeWorld",
+            "version": "1",
+            "location": "pokeworld_pack/pokeworld.json",
+            "priority": 1
+        }
+    ]
+}
