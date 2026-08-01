@@ -93,6 +93,15 @@ public class LauncherFrame extends JFrame {
         instancesModel = new InstanceTableModel(launcher.getInstances());
 
         setUndecorated(true);
+        // Sin esto, en algunas combinaciones de Windows 11 + DWM el setShape() de mas
+        // abajo deja un resto del marco nativo (titulo centrado en negrita, botones de
+        // minimizar/cerrar propios de Windows) superpuesto con nuestra barra de titulo
+        // propia. Declarar la ventana como translucida por pixel evita que DWM intente
+        // "ayudar" dibujando su propio marco encima.
+        if (GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+                .isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.PERPIXEL_TRANSLUCENT)) {
+            setBackground(new Color(0, 0, 0, 0));
+        }
         setResizable(false);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(400, 300));
@@ -114,6 +123,10 @@ public class LauncherFrame extends JFrame {
     }
 
     private void initComponents() {
+        // Fuerza la carga/registro de la fuente pixel antes de armar el panel de
+        // noticias (HTML), que la referencia por nombre de familia en su CSS.
+        PixelFont.getFamilyName();
+
         JPanel container = createContainerPanel();
         container.setLayout(new MigLayout("fill, insets dialog", "[grow][]", "[]0[grow][]"));
 
@@ -226,9 +239,9 @@ public class LauncherFrame extends JFrame {
         column.setOpaque(false);
         column.setLayout(new MigLayout("insets 6, gap 12", "[]", "[][][]push"));
 
-        styleThemedButton(discordButton, "btn_discord.png", 210, 113);
-        styleThemedButton(optionsButton, "btn_options.png", 210, 122);
-        styleThemedButton(launchButton, "btn_play.png", 230, 107);
+        styleThemedButton(discordButton, "btn_discord.png", 240, 129);
+        styleThemedButton(optionsButton, "btn_options.png", 240, 140);
+        styleThemedButton(launchButton, "btn_play.png", 260, 121);
 
         column.add(discordButton, "wrap, align center");
         column.add(optionsButton, "wrap, align center");
@@ -381,8 +394,9 @@ public class LauncherFrame extends JFrame {
 
     /**
      * Le pone a un boton el marco/arte propio como icono (recortado del sheet
-     * que armamos) y el texto centrado encima, sacando el look de boton
-     * cuadrado de Swing por defecto -- solo queda visible la imagen.
+     * que armamos) y el texto centrado encima con sombra (para que resalte
+     * arriba del arte en vez de perderse), sacando el look de boton cuadrado
+     * de Swing por defecto -- solo queda visible la imagen + texto.
      */
     private void styleThemedButton(JButton button, String resourceName, int width, int height) {
         Icon icon = SwingHelper.createIcon(Launcher.class, resourceName, width, height);
@@ -393,8 +407,24 @@ public class LauncherFrame extends JFrame {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setForeground(Color.WHITE);
-        button.setFont(PixelFont.deriveSize(15f));
+        button.setFont(PixelFont.deriveSize(17f));
         button.setPreferredSize(new Dimension(width, height));
+
+        // Resalta al pasar el mouse por arriba -- lo unico que podemos hacer
+        // sin pedir un segundo arte de "boton hover", pero se nota.
+        Color idleColor = button.getForeground();
+        Color hoverColor = BRAND_PURPLE.brighter();
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setForeground(hoverColor);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setForeground(idleColor);
+            }
+        });
     }
 
     /**

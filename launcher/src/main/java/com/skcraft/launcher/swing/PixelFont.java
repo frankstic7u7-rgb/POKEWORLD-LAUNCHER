@@ -23,6 +23,10 @@ public class PixelFont {
             try (InputStream in = Launcher.class.getResourceAsStream(RESOURCE)) {
                 if (in != null) {
                     base = Font.createFont(Font.TRUETYPE_FONT, in);
+                    // La registramos en el GraphicsEnvironment para que tambien la pueda
+                    // usar el panel de noticias (HTML/CSS) por nombre de familia, no solo
+                    // los JLabel/JButton que la piden directo por objeto Font.
+                    GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(base);
                 }
             } catch (Exception e) {
                 log.log(Level.WARNING, "No se pudo cargar la fuente " + RESOURCE, e);
@@ -32,6 +36,11 @@ public class PixelFont {
             }
         }
         return base;
+    }
+
+    /** Nombre de familia para usar en CSS (font-family) una vez cargada/registrada. */
+    public static String getFamilyName() {
+        return getBase().getFamily();
     }
 
     public static Font deriveSize(float size) {
