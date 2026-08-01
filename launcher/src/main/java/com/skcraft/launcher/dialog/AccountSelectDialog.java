@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.skcraft.concurrency.ObservableFuture;
 import com.skcraft.concurrency.ProgressObservable;
 import com.skcraft.concurrency.SettableProgress;
+import com.skcraft.launcher.Configuration;
 import com.skcraft.launcher.Launcher;
 import com.skcraft.launcher.auth.*;
 import com.skcraft.launcher.persistence.Persistence;
@@ -23,10 +24,10 @@ public class AccountSelectDialog extends JDialog {
 	private final JList<SavedSession> accountList;
 	private final JButton loginButton = new JButton(SharedLocale.tr("accounts.play"));
 	private final JButton cancelButton = new JButton(SharedLocale.tr("button.cancel"));
-	private final JButton addMojangButton = new JButton(SharedLocale.tr("accounts.addMojang"));
 	private final JButton addMicrosoftButton = new JButton(SharedLocale.tr("accounts.addMicrosoft"));
 	private final JButton removeSelected = new JButton(SharedLocale.tr("accounts.removeSelected"));
-	private final JButton offlineButton = new JButton(SharedLocale.tr("login.playOffline"));
+	private final JTextField offlineUsernameText = new JTextField();
+	private final JButton offlineButton = new JButton(SharedLocale.tr("accounts.playOfflineWith"));
 	private final LinedBoxPanel buttonsPanel = new LinedBoxPanel(true);
 
 	private final Launcher launcher;
@@ -62,22 +63,34 @@ public class AccountSelectDialog extends JDialog {
 		loginButton.setFont(loginButton.getFont().deriveFont(Font.BOLD));
 		loginButton.setMargin(new Insets(0, 10, 0, 10));
 
-		//Start Buttons
-		buttonsPanel.setBorder(BorderFactory.createEmptyBorder(26, 13, 13, 13));
-		if (launcher.getConfig().isOfflineEnabled()) {
-			buttonsPanel.addElement(offlineButton);
+		//Offline row -- entrada principal: nombre de usuario + jugar
+		offlineUsernameText.setColumns(14);
+		String lastUsername = launcher.getConfig().getLastUsername();
+		if (lastUsername != null && !lastUsername.isEmpty()) {
+			offlineUsernameText.setText(lastUsername);
 		}
+		offlineButton.setFont(offlineButton.getFont().deriveFont(Font.BOLD));
+
+		JPanel offlineRow = new JPanel();
+		offlineRow.setLayout(new BoxLayout(offlineRow, BoxLayout.X_AXIS));
+		offlineRow.add(new JLabel(SharedLocale.tr("accounts.username")));
+		offlineRow.add(Box.createHorizontalStrut(5));
+		offlineRow.add(offlineUsernameText);
+		offlineRow.add(Box.createHorizontalStrut(10));
+		offlineRow.add(offlineButton);
+		offlineRow.setBorder(BorderFactory.createEmptyBorder(0, 13, 0, 13));
+
+		//Start Buttons
+		buttonsPanel.setBorder(BorderFactory.createEmptyBorder(13, 13, 13, 13));
 		buttonsPanel.addGlue();
 		buttonsPanel.addElement(cancelButton);
 		buttonsPanel.addElement(loginButton);
 
 		//Login Buttons
 		JPanel loginButtonsRow = new JPanel(new BorderLayout(0, 5));
-		addMojangButton.setAlignmentX(CENTER_ALIGNMENT);
 		addMicrosoftButton.setAlignmentX(CENTER_ALIGNMENT);
 		removeSelected.setAlignmentX(CENTER_ALIGNMENT);
-		loginButtonsRow.add(addMojangButton, BorderLayout.NORTH);
-		loginButtonsRow.add(addMicrosoftButton, BorderLayout.CENTER);
+		loginButtonsRow.add(addMicrosoftButton, BorderLayout.NORTH);
 		loginButtonsRow.add(removeSelected, BorderLayout.SOUTH);
 		loginButtonsRow.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
 
@@ -85,27 +98,22 @@ public class AccountSelectDialog extends JDialog {
 		listAndLoginContainer.add(accountPane, BorderLayout.WEST);
 		listAndLoginContainer.add(loginButtonsRow, BorderLayout.EAST);
 		listAndLoginContainer.add(Box.createVerticalStrut(5));
-		listAndLoginContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		listAndLoginContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 
-		add(listAndLoginContainer, BorderLayout.CENTER);
+		JPanel centerContainer = new JPanel(new BorderLayout(0, 10));
+		centerContainer.add(offlineRow, BorderLayout.NORTH);
+		centerContainer.add(listAndLoginContainer, BorderLayout.CENTER);
+
+		add(centerContainer, BorderLayout.CENTER);
 		add(buttonsPanel, BorderLayout.SOUTH);
 
 		loginButton.addActionListener(ev -> attemptExistingLogin(accountList.getSelectedValue()));
 		cancelButton.addActionListener(ev -> dispose());
 
-		addMojangButton.addActionListener(ev -> {
-			Session newSession = LoginDialog.showLoginRequest(this, launcher);
-
-			if (newSession != null) {
-				launcher.getAccounts().update(newSession.toSavedSession());
-				setResult(newSession);
-			}
-		});
-
 		addMicrosoftButton.addActionListener(ev -> attemptMicrosoftLogin(SharedLocale.tr("login.microsoft.seeBrowser")));
 
-		offlineButton.addActionListener(ev ->
-				setResult(new OfflineSession(launcher.getProperties().getProperty("offlinePlayerName"))));
+		offlineButton.addActionListener(ev -> attemptOfflineLogin());
+		offlineUsernameText.addActionListener(ev -> attemptOfflineLogin());
 
 		removeSelected.addActionListener(ev -> {
 			if (accountList.getSelectedValue() != null) {
@@ -165,6 +173,36 @@ public class AccountSelectDialog extends JDialog {
 		SwingHelper.addErrorDialogCallback(this, future);
 	}
 
+	private void attemptOfflineLogin() {
+		String username = offlineUsernameText.getText().trim();
+
+		if (username.isEmpty()) {
+			SwingHelper.showErrorDialog(this, SharedLocale.tr("accounts.noUsernameError"), SharedLocale.tr("accounts.noUsernameTitle"));
+			return;
+		}
+
+		SettableProgress progress = new SettableProgress(SharedLocale.tr("accounts.fetchingSkinStatus"), -1);
+
+		ListenableFuture<?> future = launcher.getExecutor().submit(() -> {
+			OfflineSession newSession = new OfflineSession(username);
+			// Fuerza la busqueda de skin ahora (bloqueante, pero estamos en un hilo de
+			// fondo con ProgressDialog) en vez de dejarla para el primer repintado de la
+			// UI, que colgaria el hilo de Swing.
+			newSession.getAvatarImage();
+
+			Configuration config = launcher.getConfig();
+			config.setLastUsername(username);
+			Persistence.commitAndForget(config);
+			setResult(newSession);
+
+			return null;
+		});
+
+		ProgressDialog.showProgress(this, future, progress,
+				SharedLocale.tr("login.loggingInTitle"), SharedLocale.tr("accounts.fetchingSkinStatus"));
+		SwingHelper.addErrorDialogCallback(this, future);
+	}
+
 	private void attemptExistingLogin(SavedSession session) {
 		if (session == null) return;
 
@@ -200,12 +238,9 @@ public class AccountSelectDialog extends JDialog {
 		if (session.getType() == UserType.MICROSOFT) {
 			this.attemptMicrosoftLogin(message);
 		} else {
-			LoginDialog.ReloginDetails details = new LoginDialog.ReloginDetails(session.getUsername(),
-					SharedLocale.tr("login.relogin", message));
-			Session newSession = LoginDialog.showLoginRequest(AccountSelectDialog.this, launcher, details);
-
-			launcher.getAccounts().update(newSession.toSavedSession());
-			setResult(newSession);
+			// Cuenta guardada de un tipo de login que ya no soportamos (Mojang legacy).
+			// No hay forma de renovarla -- se le pide que la borre y use Microsoft u offline.
+			SwingHelper.showErrorDialog(this, SharedLocale.tr("login.relogin", message), SharedLocale.tr("errorTitle"));
 		}
 	}
 

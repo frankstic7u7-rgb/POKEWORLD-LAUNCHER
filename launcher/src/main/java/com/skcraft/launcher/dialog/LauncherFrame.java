@@ -7,12 +7,14 @@
 package com.skcraft.launcher.dialog;
 
 import com.skcraft.concurrency.ObservableFuture;
+import com.skcraft.launcher.Configuration;
 import com.skcraft.launcher.Instance;
 import com.skcraft.launcher.InstanceList;
 import com.skcraft.launcher.Launcher;
 import com.skcraft.launcher.launch.LaunchListener;
 import com.skcraft.launcher.launch.LaunchOptions;
 import com.skcraft.launcher.launch.LaunchOptions.UpdatePolicy;
+import com.skcraft.launcher.persistence.Persistence;
 import com.skcraft.launcher.swing.*;
 import com.skcraft.launcher.util.SharedLocale;
 import com.skcraft.launcher.util.SwingExecutor;
@@ -55,6 +57,11 @@ public class LauncherFrame extends JFrame {
     private final JButton optionsButton = new JButton(SharedLocale.tr("launcher.options"));
     private final JButton selfUpdateButton = new JButton(SharedLocale.tr("launcher.updateLauncher"));
     private final JCheckBox updateCheck = new JCheckBox(SharedLocale.tr("launcher.downloadUpdates"));
+    private final JButton discordButton = new JButton(SharedLocale.tr("launcher.discord"));
+    private final JSpinner maxMemorySpinner = new JSpinner(new SpinnerNumberModel(2048, 512, 32768, 512));
+
+    private static final String DISCORD_URL = "https://discord.gg/Gz2rD4hE6F";
+    private static final String BACKGROUND_RESOURCE = "background.jpg";
 
     /**
      * Create a new frame.
@@ -107,11 +114,19 @@ public class LauncherFrame extends JFrame {
         splitPane.setDividerLocation(200);
         splitPane.setDividerSize(4);
         splitPane.setOpaque(false);
-        container.add(splitPane, "grow, wrap, span 5, gapbottom unrel, w null:680, h null:350");
+        container.add(splitPane, "grow, wrap, span 6, gapbottom unrel, w null:680, h null:350");
         SwingHelper.flattenJSplitPane(splitPane);
+
+        maxMemorySpinner.setToolTipText(SharedLocale.tr("launcher.maxMemoryTooltip"));
+        maxMemorySpinner.setValue(launcher.getConfig().getMaxMemory());
+        ((JSpinner.DefaultEditor) maxMemorySpinner.getEditor()).getTextField().setColumns(4);
+
+        container.add(discordButton);
         container.add(refreshButton);
         container.add(updateCheck);
         container.add(selfUpdateButton);
+        container.add(new JLabel(SharedLocale.tr("launcher.maxMemoryLabel")), "split 2");
+        container.add(maxMemorySpinner);
         container.add(optionsButton);
         container.add(launchButton);
 
@@ -158,6 +173,14 @@ public class LauncherFrame extends JFrame {
             }
         });
 
+        discordButton.addActionListener(ActionListeners.openURL(discordButton, DISCORD_URL));
+
+        maxMemorySpinner.addChangeListener(e -> {
+            Configuration config = launcher.getConfig();
+            config.setMaxMemory((Integer) maxMemorySpinner.getValue());
+            Persistence.commitAndForget(config);
+        });
+
         instancesTable.addMouseListener(new PopupMouseAdapter() {
             @Override
             protected void showPopup(MouseEvent e) {
@@ -173,7 +196,39 @@ public class LauncherFrame extends JFrame {
     }
 
     protected JPanel createContainerPanel() {
-        return new JPanel();
+        return new BackgroundPanel();
+    }
+
+    /**
+     * A panel that paints {@link #BACKGROUND_RESOURCE} scaled to fill itself, if
+     * that resource exists in the jar. If it doesn't (e.g. it hasn't been added
+     * to the branding yet), this behaves like a plain JPanel -- no crash, no
+     * placeholder box, just the default look.
+     */
+    private static class BackgroundPanel extends JPanel {
+        private final Image background;
+
+        BackgroundPanel() {
+            setOpaque(true);
+            background = loadBackground();
+        }
+
+        private Image loadBackground() {
+            java.net.URL url = Launcher.class.getResource(BACKGROUND_RESOURCE);
+            if (url == null) {
+                return null;
+            }
+            return new ImageIcon(url).getImage();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            if (background != null) {
+                g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
+            } else {
+                super.paintComponent(g);
+            }
+        }
     }
 
     /**

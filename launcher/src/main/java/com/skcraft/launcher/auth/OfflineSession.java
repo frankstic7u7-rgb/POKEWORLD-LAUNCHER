@@ -6,9 +6,11 @@
 
 package com.skcraft.launcher.auth;
 
+import com.skcraft.launcher.auth.skin.OfflineSkinService;
 import lombok.Getter;
 import lombok.NonNull;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -23,6 +25,11 @@ public class OfflineSession implements Session {
     @Getter
     private final String name;
 
+    // Cacheado en el primer pedido -- el lookup de skin pega a la red, no queremos
+    // repetirlo cada vez que Swing repinta la lista de cuentas.
+    private byte[] avatarImage;
+    private boolean avatarFetched;
+
     /**
      * Create a new offline session using the given player name.
      *
@@ -34,7 +41,11 @@ public class OfflineSession implements Session {
 
     @Override
     public String getUuid() {
-        return (new UUID(0, 0)).toString();
+        // Mismo algoritmo que usa el propio server en modo offline (Spigot/Paper/Arclight)
+        // para generar el UUID de un jugador sin cuenta premium -- si no coincidiera, cada
+        // jugador offline terminaria con un UUID distinto en el cliente vs. en el server.
+        String seed = "OfflinePlayer:" + name;
+        return UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     @Override
@@ -59,7 +70,14 @@ public class OfflineSession implements Session {
 
     @Override
     public byte[] getAvatarImage() {
-        return null;
+        // Pega a la red la primera vez que se pide (bloqueante) -- quien construye la
+        // sesion (AccountSelectDialog.attemptOfflineLogin) lo hace dentro de un ProgressDialog, no en el EDT
+        // directo, asi que esto no cuelga la interfaz.
+        if (!avatarFetched) {
+            avatarImage = OfflineSkinService.fetchSkinHeadByUsername(name);
+            avatarFetched = true;
+        }
+        return avatarImage;
     }
 
     @Override

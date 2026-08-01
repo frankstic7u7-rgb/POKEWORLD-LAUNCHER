@@ -23,7 +23,8 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Configuration {
 
-    private boolean offlineEnabled = false;
+    private boolean offlineEnabled = true;
+    private String lastUsername;
     private JavaRuntime javaRuntime;
     private String jvmArgs;
     private int minMemory = 1024;

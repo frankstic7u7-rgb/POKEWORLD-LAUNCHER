@@ -52,6 +52,12 @@ public class HttpDownloader implements Downloader {
     private long total = 0;
     private int left = 0;
 
+    // Para mostrar velocidad de descarga en el status -- se actualiza cada vez que
+    // se pide el status (llamado periodicamente por ProgressDialog), no en cada byte.
+    private long speedSampleTime = 0;
+    private long speedSampleBytes = 0;
+    private double speedBytesPerSecond = 0;
+
     /**
      * Create a new downloader using the given executor.
      *
@@ -160,8 +166,9 @@ public class HttpDownloader implements Downloader {
     @Override
     public synchronized String getStatus() {
         String failMessage = tr("downloader.failedCount", failed.size());
+        String speedSuffix = formatSpeedSuffix();
         if (running.size() == 1) {
-            return tr("downloader.downloadingItem", running.get(0).getName()) +
+            return tr("downloader.downloadingItem", running.get(0).getName()) + speedSuffix +
                     "\n" + running.get(0).getStatus() +
                     "\n" + failMessage;
         } else if (running.size() > 0) {
@@ -170,11 +177,61 @@ public class HttpDownloader implements Downloader {
                 builder.append("\n");
                 builder.append(job.getStatus());
             }
-            return tr("downloader.downloadingList", queue.size(), left, failed.size()) +
+            return tr("downloader.downloadingList", queue.size(), left, failed.size()) + speedSuffix +
                     builder.toString() +
                     "\n" + failMessage;
         } else {
             return SharedLocale.tr("downloader.noDownloads");
+        }
+    }
+
+    /**
+     * Actualiza la muestra de velocidad (si paso suficiente tiempo desde la
+     * ultima) y devuelve un sufijo tipo " (1.4 MB/s)" listo para el status, o
+     * string vacio si todavia no hay suficiente informacion para estimarla.
+     */
+    private String formatSpeedSuffix() {
+        long now = System.currentTimeMillis();
+        long bytesNow = getTotalDownloadedBytes();
+
+        if (speedSampleTime == 0) {
+            speedSampleTime = now;
+            speedSampleBytes = bytesNow;
+            return "";
+        }
+
+        long elapsedMs = now - speedSampleTime;
+        if (elapsedMs >= 200) {
+            long bytesDelta = bytesNow - speedSampleBytes;
+            double instantBps = bytesDelta / (elapsedMs / 1000.0);
+            // Suavizado exponencial simple para que el numero no salte tanto entre muestras.
+            speedBytesPerSecond = speedBytesPerSecond <= 0
+                    ? instantBps : (speedBytesPerSecond * 0.7 + instantBps * 0.3);
+            speedSampleTime = now;
+            speedSampleBytes = bytesNow;
+        }
+
+        if (speedBytesPerSecond <= 0) {
+            return "";
+        }
+        return " (" + formatSpeed(speedBytesPerSecond) + ")";
+    }
+
+    private long getTotalDownloadedBytes() {
+        long total = this.downloaded;
+        for (HttpDownloadJob job : running) {
+            total += Math.max(0, job.getProgress() * job.size);
+        }
+        return total;
+    }
+
+    private static String formatSpeed(double bytesPerSecond) {
+        if (bytesPerSecond < 1024) {
+            return String.format("%.0f B/s", bytesPerSecond);
+        } else if (bytesPerSecond < 1024 * 1024) {
+            return String.format("%.1f KB/s", bytesPerSecond / 1024);
+        } else {
+            return String.format("%.2f MB/s", bytesPerSecond / (1024 * 1024));
         }
     }
 
