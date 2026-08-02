@@ -37,6 +37,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -313,6 +314,15 @@ public class LauncherFrame extends JFrame {
      */
     private static class DescriptionBackgroundPanel extends JPanel {
         private final Image background;
+        // Cachea la version ya escalada al tamano del panel -- sin esto,
+        // Java2D reescalaba la imagen fuente (1920x1080) de cero en CADA
+        // repintado (arrastrar la ventana, parpadeo del cursor en el campo
+        // de texto, hover de botones, etc.), que es carisimo y se sentia
+        // como lag general del launcher pese a que la ventana no cambia de
+        // tamano nunca (setResizable(false)).
+        private BufferedImage scaledCache;
+        private int cachedWidth = -1;
+        private int cachedHeight = -1;
 
         DescriptionBackgroundPanel() {
             setOpaque(true);
@@ -323,9 +333,20 @@ public class LauncherFrame extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             if (background != null) {
-                g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
-                g.setColor(new Color(10, 6, 18, 90));
-                g.fillRect(0, 0, getWidth(), getHeight());
+                int w = getWidth();
+                int h = getHeight();
+                if (w > 0 && h > 0 && (w != cachedWidth || h != cachedHeight)) {
+                    scaledCache = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2 = scaledCache.createGraphics();
+                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2.drawImage(background, 0, 0, w, h, null);
+                    g2.setColor(new Color(10, 6, 18, 90));
+                    g2.fillRect(0, 0, w, h);
+                    g2.dispose();
+                    cachedWidth = w;
+                    cachedHeight = h;
+                }
+                g.drawImage(scaledCache, 0, 0, null);
             } else {
                 g.setColor(BRAND_BLACK);
                 g.fillRect(0, 0, getWidth(), getHeight());
@@ -627,6 +648,11 @@ public class LauncherFrame extends JFrame {
      */
     private static class BackgroundPanel extends JPanel {
         private final Image background;
+        // Mismo motivo que en DescriptionBackgroundPanel -- cachear el
+        // escalado en vez de reescalar la imagen fuente en cada repintado.
+        private BufferedImage scaledCache;
+        private int cachedWidth = -1;
+        private int cachedHeight = -1;
 
         BackgroundPanel() {
             setOpaque(true);
@@ -644,7 +670,18 @@ public class LauncherFrame extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             if (background != null) {
-                g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
+                int w = getWidth();
+                int h = getHeight();
+                if (w > 0 && h > 0 && (w != cachedWidth || h != cachedHeight)) {
+                    scaledCache = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2 = scaledCache.createGraphics();
+                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2.drawImage(background, 0, 0, w, h, null);
+                    g2.dispose();
+                    cachedWidth = w;
+                    cachedHeight = h;
+                }
+                g.drawImage(scaledCache, 0, 0, null);
             } else {
                 g.setColor(BRAND_BLACK);
                 g.fillRect(0, 0, getWidth(), getHeight());
