@@ -26,10 +26,10 @@
     },
     {
       "type": "file",
-      "hash": "4f25e9afddcfcae99e43b935f5a0a5d953f6ee9f",
-      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/4f25e9afddcfcae99e43b935f5a0a5d953f6ee9f",
+      "hash": "200dac45abbdb7514e29db1af9a7f602503d8d35",
+      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/200dac45abbdb7514e29db1af9a7f602503d8d35",
       "to": "mods/pokeworld_lite.jar",
-      "size": 96652288,
+      "size": 96530663,
       "userFile": false
     }
   ],
