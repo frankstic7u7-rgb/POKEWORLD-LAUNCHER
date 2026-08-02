@@ -26,6 +26,30 @@
     },
     {
       "type": "file",
+      "hash": "6bb450d69c2fc8edd206010b1146bb0916215fd5",
+      "location": "6b/b4/6bb450d69c2fc8edd206010b1146bb0916215fd5",
+      "to": "mods/fancymenu_fabric_3.9.9_MC_1.21.1.jar",
+      "size": 26257186,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "c521e23a8be17a941f4f95a76feba9df5e3de5d0",
+      "location": "c5/21/c521e23a8be17a941f4f95a76feba9df5e3de5d0",
+      "to": "mods/konkrete_fabric_1.9.9_MC_1.21.jar",
+      "size": 786695,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "5624eea73f251c70a9489192d326f9b4aab3b13c",
+      "location": "56/24/5624eea73f251c70a9489192d326f9b4aab3b13c",
+      "to": "mods/melody_fabric_1.0.10_MC_1.21.jar",
+      "size": 188035,
+      "userFile": false
+    },
+    {
+      "type": "file",
       "hash": "37e634c1f0f82e0f9f41588bb9b29d0263dc1681",
       "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/37e634c1f0f82e0f9f41588bb9b29d0263dc1681",
       "to": "mods/pokeworld_pro.jar",
@@ -34,10 +58,10 @@
     },
     {
       "type": "file",
-      "hash": "0b8dfe86ea564dda3a2a7757258c267c67da41c9",
-      "location": "0b/8d/0b8dfe86ea564dda3a2a7757258c267c67da41c9",
+      "hash": "4489c4adea123b686ef7df2ce7e68fc9757f36cd",
+      "location": "44/89/4489c4adea123b686ef7df2ce7e68fc9757f36cd",
       "to": "mods/pwcustommenu-1.0.0.jar",
-      "size": 30394872,
+      "size": 4310,
       "userFile": false
     }
   ],
