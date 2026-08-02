@@ -261,9 +261,9 @@ public class LauncherFrame extends JFrame {
         column.setOpaque(false);
         column.setLayout(new MigLayout("insets 6, gap 12", "[]", "[][][]push"));
 
-        styleThemedButton(discordButton, "btn_discord.png", 240, 129);
-        styleThemedButton(optionsButton, "btn_options.png", 240, 140);
-        styleThemedButton(launchButton, "btn_play.png", 260, 121);
+        styleThemedButton(discordButton, "btn_discord.png", 240, 129, 0.63);
+        styleThemedButton(optionsButton, "btn_options.png", 240, 140, 0.65);
+        styleThemedButton(launchButton, "btn_play.png", 260, 121, 0.69);
 
         column.add(discordButton, "wrap, align center");
         column.add(optionsButton, "wrap, align center");
@@ -426,9 +426,17 @@ public class LauncherFrame extends JFrame {
     private static final Color BUTTON_TEXT_SHADOW = new Color(30, 10, 45);
 
     private void styleThemedButton(JButton button, String resourceName, int width, int height) {
+        styleThemedButton(button, resourceName, width, height, 0.64);
+    }
+
+    private void styleThemedButton(JButton button, String resourceName, int width, int height, double plateCenterRatio) {
         Icon icon = SwingHelper.createIcon(Launcher.class, resourceName, width, height);
         button.setIcon(icon);
         button.setText(button.getText().toUpperCase());
+        // Donde cae verticalmente el centro de la "placa" vacia del arte de
+        // ESTE boton en particular -- se midio por pixeles, no es igual en
+        // los 3 (btn_play es mas ancho/chato que los otros dos).
+        button.putClientProperty("plateCenterRatio", plateCenterRatio);
         button.setHorizontalTextPosition(SwingConstants.CENTER);
         button.setVerticalTextPosition(SwingConstants.CENTER);
         button.setIconTextGap(0);
@@ -473,11 +481,14 @@ public class LauncherFrame extends JFrame {
             // Centrado contra el boton entero, no contra el textRect que calcula
             // BasicButtonUI en base al layout de icono+texto -- con icono y texto
             // los dos en CENTER ese calculo queda corrido, esto es mas confiable.
-            // El 0.60 (en vez de 0.5) es porque la "placa" vacia del arte del
-            // boton no esta en el medio exacto de la imagen -- el Pokemon
-            // ocupa el tercio de arriba, la placa esta mas abajo.
+            // El ratio (en vez de 0.5 = medio exacto) es porque la "placa" vacia
+            // del arte no esta en el medio de la imagen -- el Pokemon ocupa el
+            // tercio de arriba. Se midio por pixeles para cada boton (variable
+            // "plateCenterRatio"), no es el mismo numero en los 3.
+            Object ratioProp = b.getClientProperty("plateCenterRatio");
+            double ratio = ratioProp instanceof Double ? (Double) ratioProp : 0.6;
             int x = (b.getWidth() - fm.stringWidth(text)) / 2;
-            int y = (int) (b.getHeight() * 0.60) + fm.getAscent() / 2 - fm.getDescent() / 2;
+            int y = (int) (b.getHeight() * ratio) + fm.getAscent() / 2 - fm.getDescent() / 2;
 
             g2.setColor(BUTTON_TEXT_SHADOW);
             for (int dx = -1; dx <= 1; dx++) {

@@ -9,6 +9,7 @@ import com.skcraft.concurrency.SettableProgress;
 import com.skcraft.launcher.Configuration;
 import com.skcraft.launcher.Launcher;
 import com.skcraft.launcher.auth.*;
+import com.skcraft.launcher.auth.skin.OfflineSkinService;
 import com.skcraft.launcher.persistence.Persistence;
 import com.skcraft.launcher.swing.LinedBoxPanel;
 import com.skcraft.launcher.swing.SwingHelper;
@@ -17,6 +18,8 @@ import com.skcraft.launcher.util.SwingExecutor;
 import lombok.RequiredArgsConstructor;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.concurrent.Callable;
 
@@ -28,6 +31,8 @@ public class AccountSelectDialog extends JDialog {
 	private final JButton removeSelected = new JButton(SharedLocale.tr("accounts.removeSelected"));
 	private final JTextField offlineUsernameText = new JTextField();
 	private final JButton offlineButton = new JButton(SharedLocale.tr("accounts.playOfflineWith"));
+	private final JLabel skinPreviewLabel = new JLabel();
+	private final javax.swing.Timer skinPreviewTimer = new javax.swing.Timer(600, null);
 	private final LinedBoxPanel buttonsPanel = new LinedBoxPanel(true);
 
 	private final Launcher launcher;
@@ -69,14 +74,31 @@ public class AccountSelectDialog extends JDialog {
 		String lastUsername = launcher.getConfig().getLastUsername();
 		if (lastUsername != null && !lastUsername.isEmpty()) {
 			offlineUsernameText.setText(lastUsername);
+			skinPreviewTimer.restart();
 		}
 		offlineButton.setFont(offlineButton.getFont().deriveFont(Font.BOLD));
+
+		//Vista previa de skin -- se actualiza sola mientras el jugador escribe su nombre,
+		//asi confirma visualmente que el launcher va a cargar la skin real de esa cuenta
+		//(estilo SKlauncher) antes de apretar "Jugar".
+		skinPreviewLabel.setIcon(SwingHelper.createIcon(Launcher.class, "default_skin.png", 32, 32));
+		skinPreviewLabel.setPreferredSize(new Dimension(32, 32));
+		skinPreviewLabel.setToolTipText(SharedLocale.tr("accounts.skinPreviewTooltip"));
+		skinPreviewTimer.setRepeats(false);
+		skinPreviewTimer.addActionListener(ev -> refreshSkinPreview());
+		offlineUsernameText.getDocument().addDocumentListener(new DocumentListener() {
+			@Override public void insertUpdate(DocumentEvent e) { skinPreviewTimer.restart(); }
+			@Override public void removeUpdate(DocumentEvent e) { skinPreviewTimer.restart(); }
+			@Override public void changedUpdate(DocumentEvent e) { skinPreviewTimer.restart(); }
+		});
 
 		JPanel offlineRow = new JPanel();
 		offlineRow.setLayout(new BoxLayout(offlineRow, BoxLayout.X_AXIS));
 		offlineRow.add(new JLabel(SharedLocale.tr("accounts.username")));
 		offlineRow.add(Box.createHorizontalStrut(5));
 		offlineRow.add(offlineUsernameText);
+		offlineRow.add(Box.createHorizontalStrut(8));
+		offlineRow.add(skinPreviewLabel);
 		offlineRow.add(Box.createHorizontalStrut(10));
 		offlineRow.add(offlineButton);
 		offlineRow.setBorder(BorderFactory.createEmptyBorder(0, 13, 0, 13));
@@ -172,6 +194,27 @@ public class AccountSelectDialog extends JDialog {
 		ProgressDialog.showProgress(this, future, progress,
 				SharedLocale.tr("login.loggingInTitle"), status);
 		SwingHelper.addErrorDialogCallback(this, future);
+	}
+
+	private void refreshSkinPreview() {
+		String username = offlineUsernameText.getText().trim();
+		if (username.length() < 3) {
+			skinPreviewLabel.setIcon(SwingHelper.createIcon(Launcher.class, "default_skin.png", 32, 32));
+			return;
+		}
+
+		launcher.getExecutor().submit(() -> {
+			byte[] head = OfflineSkinService.fetchSkinHeadByUsername(username);
+			SwingUtilities.invokeLater(() -> {
+				// Si el jugador siguio escribiendo mientras se buscaba, este resultado ya no aplica
+				if (!username.equals(offlineUsernameText.getText().trim())) return;
+				if (head != null) {
+					skinPreviewLabel.setIcon(new ImageIcon(head));
+				} else {
+					skinPreviewLabel.setIcon(SwingHelper.createIcon(Launcher.class, "default_skin.png", 32, 32));
+				}
+			});
+		});
 	}
 
 	private void attemptOfflineLogin() {
