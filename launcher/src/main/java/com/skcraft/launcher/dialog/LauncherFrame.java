@@ -85,7 +85,10 @@ public class LauncherFrame extends JFrame {
 
     private final JButton closeButton = new JButton("✕");
     private final JButton minimizeButton = new JButton("–");
+    private final JPanel resizeGrip = new ResizeGripPanel();
     private Point dragOffset;
+    private Point resizeStartMouse;
+    private Dimension resizeStartSize;
 
     /**
      * Create a new frame.
@@ -108,13 +111,29 @@ public class LauncherFrame extends JFrame {
                 .isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.PERPIXEL_TRANSLUCENT)) {
             setBackground(new Color(0, 0, 0, 0));
         }
-        setResizable(false);
+        setResizable(true);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(400, 300));
+        setMinimumSize(new Dimension(700, 500));
         initComponents();
         pack();
         setLocationRelativeTo(null);
         setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS));
+
+        // Ventana sin decoracion -> sin esquinas de resize del sistema operativo.
+        // Reaplica el shape redondeado cada vez que cambia de tamano (si no, el
+        // "recorte" redondeado se queda con las medidas viejas) y muestra la
+        // resize grip flotando en la esquina inferior derecha.
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS));
+                positionResizeGrip();
+            }
+        });
+        getLayeredPane().add(resizeGrip, JLayeredPane.PALETTE_LAYER);
+        resizeGrip.setSize(16, 16);
+        positionResizeGrip();
+        wireResizeGrip();
 
         SwingHelper.setFrameIcon(this, Launcher.class, "icon.png");
 
@@ -476,6 +495,62 @@ public class LauncherFrame extends JFrame {
      * poder tener esquinas redondeadas), hay que reimplementar a mano el
      * arrastre de la ventana y los botones de minimizar/cerrar.
      */
+    private void positionResizeGrip() {
+        resizeGrip.setLocation(getWidth() - resizeGrip.getWidth() - 4, getHeight() - resizeGrip.getHeight() - 4);
+    }
+
+    /**
+     * La ventana es undecorated (sin marco de Windows), asi que no hay
+     * esquina de resize nativa -- esta es la propia, arrastrando desde la
+     * esquina inferior derecha.
+     */
+    private void wireResizeGrip() {
+        resizeGrip.setCursor(Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR));
+        resizeGrip.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                resizeStartMouse = e.getLocationOnScreen();
+                resizeStartSize = getSize();
+            }
+        });
+        resizeGrip.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (resizeStartMouse == null) return;
+                Point current = e.getLocationOnScreen();
+                int dw = current.x - resizeStartMouse.x;
+                int dh = current.y - resizeStartMouse.y;
+                Dimension min = getMinimumSize();
+                int newWidth = Math.max(min.width, resizeStartSize.width + dw);
+                int newHeight = Math.max(min.height, resizeStartSize.height + dh);
+                setSize(newWidth, newHeight);
+            }
+        });
+    }
+
+    /**
+     * Grip visual chico -- unas lineas diagonales, como el resize handle de
+     * cualquier ventana nativa -- para que se note que ahi se puede agrandar.
+     */
+    private static class ResizeGripPanel extends JPanel {
+        ResizeGripPanel() {
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(new Color(255, 255, 255, 120));
+            int w = getWidth();
+            int h = getHeight();
+            for (int i = 1; i <= 3; i++) {
+                int offset = i * 4;
+                g2.drawLine(w - offset, h - 1, w - 1, h - offset);
+            }
+            g2.dispose();
+        }
+    }
+
     private JPanel createTitleBar() {
         JPanel titleBar = new JPanel(new BorderLayout());
         titleBar.setOpaque(false);
