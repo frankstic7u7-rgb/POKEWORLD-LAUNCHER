@@ -31,6 +31,14 @@
       "to": "mods/pokeworld_lite.jar",
       "size": 96530663,
       "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "c5a25d7324d014870bc5b88efaf914dc09d46a6c",
+      "location": "c5/a2/c5a25d7324d014870bc5b88efaf914dc09d46a6c",
+      "to": "mods/pwcustommenu-1.0.0.jar",
+      "size": 5165,
+      "userFile": false
     }
   ],
   "versionManifest": {
