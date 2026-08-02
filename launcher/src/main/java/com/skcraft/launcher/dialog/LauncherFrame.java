@@ -128,6 +128,14 @@ public class LauncherFrame extends JFrame {
             public void componentResized(java.awt.event.ComponentEvent e) {
                 setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS));
                 positionResizeGrip();
+                // Sin esto, al arrastrar el grip quedaban restos de texto/fondo
+                // viejos pintados encima del nuevo layout -- Swing no siempre
+                // vuelve a pintar TODO el area despues de un resize manual de
+                // una ventana sin decoracion, revalidate+repaint fuerza que se
+                // recalcule y repinte todo de cero.
+                Container content = getContentPane();
+                content.revalidate();
+                content.repaint();
             }
         });
         getLayeredPane().add(resizeGrip, JLayeredPane.PALETTE_LAYER);

@@ -34,6 +34,22 @@
     },
     {
       "type": "file",
+      "hash": "ec425f712f358fe97e3b80c6e3922b73ab529b17",
+      "location": "ec/42/ec425f712f358fe97e3b80c6e3922b73ab529b17",
+      "to": "mods/ImmersiveUI-FABRIC-0.3.3+1.21.1.jar",
+      "size": 211187,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "31810186ebd3287f09a41b3e525c5164a7700045",
+      "location": "31/81/31810186ebd3287f09a41b3e525c5164a7700045",
+      "to": "mods/InventoryParticles-2.6.0+1.21.1+fabric.jar",
+      "size": 1718560,
+      "userFile": false
+    },
+    {
+      "type": "file",
       "hash": "c521e23a8be17a941f4f95a76feba9df5e3de5d0",
       "location": "c5/21/c521e23a8be17a941f4f95a76feba9df5e3de5d0",
       "to": "mods/konkrete_fabric_1.9.9_MC_1.21.jar",
@@ -46,6 +62,22 @@
       "location": "56/24/5624eea73f251c70a9489192d326f9b4aab3b13c",
       "to": "mods/melody_fabric_1.0.10_MC_1.21.jar",
       "size": 188035,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "dabe58029bea8154654a54b3d4a667543c4d964c",
+      "location": "da/be/dabe58029bea8154654a54b3d4a667543c4d964c",
+      "to": "mods/MossyLib-1.5.0+1.21.1+fabric.jar",
+      "size": 182096,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "e18bf47209c43d2eff882fd906f2cafd887b7378",
+      "location": "e1/8b/e18bf47209c43d2eff882fd906f2cafd887b7378",
+      "to": "mods/OctoLib-FABRIC-0.6.2+1.21.jar",
+      "size": 543254,
       "userFile": false
     },
     {
