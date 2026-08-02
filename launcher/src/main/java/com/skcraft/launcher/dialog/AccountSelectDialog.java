@@ -71,6 +71,7 @@ public class AccountSelectDialog extends JDialog {
 
 		//Offline row -- entrada principal: nombre de usuario + jugar
 		offlineUsernameText.setColumns(14);
+		offlineUsernameText.setMargin(new Insets(2, 6, 2, 6));
 		String lastUsername = launcher.getConfig().getLastUsername();
 		if (lastUsername != null && !lastUsername.isEmpty()) {
 			offlineUsernameText.setText(lastUsername);

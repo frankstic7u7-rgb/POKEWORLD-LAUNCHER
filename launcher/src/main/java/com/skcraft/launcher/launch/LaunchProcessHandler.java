@@ -43,7 +43,9 @@ public class LaunchProcessHandler implements Function<Process, ProcessConsoleFra
                 public void run() {
                     consoleFrame = new ProcessConsoleFrame(CONSOLE_NUM_LINES, true);
                     consoleFrame.setProcess(process);
-                    consoleFrame.setVisible(true);
+                    // No se muestra sola -- el jugador no tiene por que ver una consola
+                    // de logs al entrar al juego. Sigue capturando el output igual, por
+                    // si hace falta revisarlo despues (boton "Consola" en Opciones).
                     MessageLog messageLog = consoleFrame.getMessageLog();
                     messageLog.consume(process.getInputStream());
                     messageLog.consume(process.getErrorStream());
