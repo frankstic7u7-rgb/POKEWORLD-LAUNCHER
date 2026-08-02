@@ -37,6 +37,7 @@ public class LaunchProcessHandler implements Function<Process, ProcessConsoleFra
 
     private final Launcher launcher;
     private ProcessConsoleFrame consoleFrame;
+    private OutputStream gameLogStream;
 
     public LaunchProcessHandler(@NonNull Launcher launcher) {
         this.launcher = launcher;
@@ -76,9 +77,9 @@ public class LaunchProcessHandler implements Function<Process, ProcessConsoleFra
                     // de logs al entrar al juego. Sigue capturando el output igual, por
                     // si hace falta revisarlo despues (boton "Consola" en Opciones).
                     MessageLog messageLog = consoleFrame.getMessageLog();
-                    OutputStream fileOut = openLogStream(finalLogFile);
-                    teeStream(process.getInputStream(), messageLog.getOutputStream(), fileOut);
-                    teeStream(process.getErrorStream(), messageLog.getOutputStream(messageLog.asError()), fileOut);
+                    gameLogStream = openLogStream(finalLogFile);
+                    teeStream(process.getInputStream(), messageLog.getOutputStream(), gameLogStream);
+                    teeStream(process.getErrorStream(), messageLog.getOutputStream(messageLog.asError()), gameLogStream);
                 }
             });
 
@@ -88,6 +89,18 @@ public class LaunchProcessHandler implements Function<Process, ProcessConsoleFra
             // Orphan process
         } catch (InvocationTargetException e) {
             log.log(Level.WARNING, "Unexpected failure", e);
+        } finally {
+            // Sin esto el archivo se queda abierto durante toda la vida del
+            // launcher -- si el jugador entra al juego mas de una vez en la
+            // misma sesion del launcher, la segunda vez la rotacion de logs
+            // (latest.log -> previous.log) fallaba porque Windows no deja
+            // mover un archivo que sigue con un handle abierto.
+            if (gameLogStream != null) {
+                try {
+                    gameLogStream.close();
+                } catch (IOException ignored) {
+                }
+            }
         }
 
         log.info("Process ended, re-showing launcher...");
