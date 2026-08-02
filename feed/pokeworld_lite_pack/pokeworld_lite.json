@@ -1,6 +1,6 @@
 {
-  "title": "PokeWorld (Pro)",
-  "name": "pokeworld",
+  "title": "PokeWorld (Lite)",
+  "name": "pokeworld_lite",
   "version": "1",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
@@ -26,10 +26,10 @@
     },
     {
       "type": "file",
-      "hash": "37e634c1f0f82e0f9f41588bb9b29d0263dc1681",
-      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/37e634c1f0f82e0f9f41588bb9b29d0263dc1681",
-      "to": "mods/pokeworld_pro.jar",
-      "size": 106855858,
+      "hash": "4f25e9afddcfcae99e43b935f5a0a5d953f6ee9f",
+      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/4f25e9afddcfcae99e43b935f5a0a5d953f6ee9f",
+      "to": "mods/pokeworld_lite.jar",
+      "size": 96652288,
       "userFile": false
     }
   ],

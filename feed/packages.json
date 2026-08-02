@@ -3,10 +3,17 @@
     "packages": [
         {
             "name": "pokeworld",
-            "title": "PokeWorld",
+            "title": "PokeWorld (Pro)",
             "version": "1",
             "location": "pokeworld_pack/pokeworld.json",
             "priority": 1
+        },
+        {
+            "name": "pokeworld_lite",
+            "title": "PokeWorld (Lite)",
+            "version": "1",
+            "location": "pokeworld_lite_pack/pokeworld_lite.json",
+            "priority": 2
         }
     ]
 }

@@ -159,4 +159,6 @@ $RECYCLE.BIN/
 # Carpetas de trabajo local para armar el modpack (no se commitean, son insumo/salida del builder)
 /build_project/
 /build_project_output/
+/build_project_lite/
+/build_project_lite_output/
 /feed_staging/

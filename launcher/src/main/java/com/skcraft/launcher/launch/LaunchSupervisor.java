@@ -16,7 +16,6 @@ import com.skcraft.launcher.auth.Session;
 import com.skcraft.launcher.dialog.AccountSelectDialog;
 import com.skcraft.launcher.dialog.ProcessConsoleFrame;
 import com.skcraft.launcher.dialog.ProgressDialog;
-import com.skcraft.launcher.launch.LaunchOptions.UpdatePolicy;
 import com.skcraft.launcher.launch.runtime.JavaRuntime;
 import com.skcraft.launcher.model.minecraft.JavaVersion;
 import com.skcraft.launcher.persistence.Persistence;
@@ -83,7 +82,12 @@ public class LaunchSupervisor {
             if (update) {
                 // Execute the updater
                 Updater updater = new Updater(launcher, instance);
-                updater.setOnline(options.getUpdatePolicy() == UpdatePolicy.ALWAYS_UPDATE || session.isOnline());
+                // El pack se descarga siempre desde nuestro propio hosting (GitHub), no
+                // desde Mojang -- no hace falta una cuenta premium/online para bajarlo,
+                // asi que alcanza con tener conexion a internet. Todas las sesiones de
+                // PokeWorld son offline (session.isOnline() siempre da false) por diseno,
+                // asi que atar esto a session.isOnline() bloqueaba la descarga para todos.
+                updater.setOnline(true);
                 ObservableFuture<Instance> future = new ObservableFuture<Instance>(
                         launcher.getExecutor().submit(updater), updater);
 

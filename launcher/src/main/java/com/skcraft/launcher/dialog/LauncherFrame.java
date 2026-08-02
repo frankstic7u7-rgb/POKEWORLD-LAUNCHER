@@ -28,6 +28,7 @@ import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.plaf.basic.BasicButtonUI;
+import javax.swing.plaf.basic.BasicToggleButtonUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -64,6 +65,8 @@ public class LauncherFrame extends JFrame {
     private final JButton donateButton = new JButton(SharedLocale.tr("launcher.donate"));
     private final JSpinner maxMemorySpinner = new JSpinner(new SpinnerNumberModel(2048, 512, 32768, 512));
     private final JLabel onlineCountLabel = new JLabel(" ");
+    private final JToggleButton packProToggle = new JToggleButton();
+    private final JToggleButton packLiteToggle = new JToggleButton();
 
     private static final String DISCORD_URL = "https://discord.gg/Gz2rD4hE6F";
     private static final String DONATE_URL = "https://pokeworld.contetops.com/tienda";
@@ -191,9 +194,8 @@ public class LauncherFrame extends JFrame {
     }
 
     /**
-     * Panel central: titulo grande en fuente pixel + descripcion/eventos
-     * reales del server, reemplaza la vieja lista de instancias (con un solo
-     * modpack no hacia falta un selector).
+     * Panel central: titulo grande en fuente pixel + selector de pack
+     * (Lite/Pro) + descripcion/eventos reales del server.
      */
     private JPanel createDescriptionPanel() {
         JPanel panel = new DescriptionBackgroundPanel();
@@ -214,14 +216,93 @@ public class LauncherFrame extends JFrame {
         headerBox.add(title, BorderLayout.NORTH);
         headerBox.add(onlineCountLabel, BorderLayout.SOUTH);
 
+        JPanel topSection = new JPanel();
+        topSection.setOpaque(false);
+        topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
+        topSection.add(headerBox);
+        topSection.add(createPackSelector());
+
         webView = createNewsPanel();
         webView.setOpaque(false);
         styleGlassPanel(webView);
 
-        panel.add(headerBox, BorderLayout.NORTH);
+        panel.add(topSection, BorderLayout.NORTH);
         panel.add(webView, BorderLayout.CENTER);
 
         return panel;
+    }
+
+    /**
+     * Selector de pack Lite/Pro -- dos "cards" grandes y clickeables (no un
+     * combo chico) porque el pedido explicito fue que se note bien cual
+     * esta eligiendo el jugador antes de apretar Jugar. Usa
+     * BasicToggleButtonUI en vez del look nativo de Windows por la misma
+     * razon que el resto de los botones tematizados: un ToggleButton con
+     * Border propio + setBackground se pinta blanco/plano con
+     * WindowsButtonUI si no se fuerza el UI basico.
+     */
+    private JPanel createPackSelector() {
+        ButtonGroup group = new ButtonGroup();
+        group.add(packProToggle);
+        group.add(packLiteToggle);
+
+        stylePackCard(packProToggle, SharedLocale.tr("launcher.packProTitle"), SharedLocale.tr("launcher.packProDesc"));
+        stylePackCard(packLiteToggle, SharedLocale.tr("launcher.packLiteTitle"), SharedLocale.tr("launcher.packLiteDesc"));
+
+        if ("pokeworld_lite".equals(launcher.getConfig().getSelectedPack())) {
+            packLiteToggle.setSelected(true);
+        } else {
+            packProToggle.setSelected(true);
+        }
+
+        ActionListener onPick = ev -> {
+            String pack = packLiteToggle.isSelected() ? "pokeworld_lite" : "pokeworld";
+            Configuration config = launcher.getConfig();
+            config.setSelectedPack(pack);
+            Persistence.commitAndForget(config);
+        };
+        packProToggle.addActionListener(onPick);
+        packLiteToggle.addActionListener(onPick);
+
+        JLabel hint = new JLabel(SharedLocale.tr("launcher.packChooseHint"));
+        hint.setForeground(new Color(0xff, 0xc9, 0x4d));
+        hint.setFont(hint.getFont().deriveFont(Font.BOLD, 12f));
+        hint.setBorder(BorderFactory.createEmptyBorder(4, 6, 2, 6));
+
+        JPanel cardsRow = new JPanel(new GridLayout(1, 2, 10, 0));
+        cardsRow.setOpaque(false);
+        cardsRow.add(packProToggle);
+        cardsRow.add(packLiteToggle);
+        cardsRow.setBorder(BorderFactory.createEmptyBorder(0, 6, 4, 6));
+
+        JPanel container = new JPanel(new BorderLayout());
+        container.setOpaque(false);
+        container.add(hint, BorderLayout.NORTH);
+        container.add(cardsRow, BorderLayout.CENTER);
+
+        return container;
+    }
+
+    private void stylePackCard(JToggleButton toggle, String title, String description) {
+        toggle.setText("<html><div style='text-align:center; width:170px;'><b style='font-size:13px;'>"
+                + title + "</b><br><span style='font-size:11px;'>" + description + "</span></div></html>");
+        toggle.setForeground(Color.WHITE);
+        toggle.setFocusPainted(false);
+        toggle.setPreferredSize(new Dimension(200, 68));
+        toggle.setUI(new BasicToggleButtonUI());
+        toggle.setOpaque(true);
+        toggle.setBackground(new Color(30, 18, 46, 220));
+        toggle.setBorder(BorderFactory.createLineBorder(PANEL_BORDER, 1));
+
+        toggle.addChangeListener(ev -> {
+            if (toggle.isSelected()) {
+                toggle.setBackground(BRAND_PURPLE.darker());
+                toggle.setBorder(BorderFactory.createLineBorder(BRAND_PURPLE, 2));
+            } else {
+                toggle.setBackground(new Color(30, 18, 46, 220));
+                toggle.setBorder(BorderFactory.createLineBorder(PANEL_BORDER, 1));
+            }
+        });
     }
 
     /**
@@ -264,6 +345,10 @@ public class LauncherFrame extends JFrame {
         styleThemedButton(discordButton, "btn_discord.png", 240, 129, 0.63);
         styleThemedButton(optionsButton, "btn_options.png", 240, 140, 0.65);
         styleThemedButton(launchButton, "btn_play.png", 260, 121, 0.69);
+        // Ajuste fino: en Discord y Jugar el texto quedaba 1px corrido a la
+        // izquierda del centro real de la placa (no es simetrica pixel a pixel).
+        discordButton.putClientProperty("textXOffset", 1);
+        launchButton.putClientProperty("textXOffset", 1);
 
         column.add(discordButton, "wrap, align center");
         column.add(optionsButton, "wrap, align center");
@@ -487,7 +572,9 @@ public class LauncherFrame extends JFrame {
             // "plateCenterRatio"), no es el mismo numero en los 3.
             Object ratioProp = b.getClientProperty("plateCenterRatio");
             double ratio = ratioProp instanceof Double ? (Double) ratioProp : 0.6;
-            int x = (b.getWidth() - fm.stringWidth(text)) / 2;
+            Object xOffsetProp = b.getClientProperty("textXOffset");
+            int xOffset = xOffsetProp instanceof Integer ? (Integer) xOffsetProp : 0;
+            int x = (b.getWidth() - fm.stringWidth(text)) / 2 + xOffset;
             int y = (int) (b.getHeight() * ratio) + fm.getAscent() / 2 - fm.getDescent() / 2;
 
             g2.setColor(BUTTON_TEXT_SHADOW);
@@ -686,8 +773,11 @@ public class LauncherFrame extends JFrame {
             return;
         }
 
-        int row = instancesTable.getSelectedRow();
-        Instance instance = launcher.getInstances().get(row >= 0 ? row : 0);
+        Instance instance = findInstanceByName(launcher.getConfig().getSelectedPack());
+        if (instance == null) {
+            int row = instancesTable.getSelectedRow();
+            instance = launcher.getInstances().get(row >= 0 ? row : 0);
+        }
 
         LaunchOptions options = new LaunchOptions.Builder()
                 .setInstance(instance)
@@ -696,6 +786,16 @@ public class LauncherFrame extends JFrame {
                 .setWindow(this)
                 .build();
         launcher.getLaunchSupervisor().launch(options);
+    }
+
+    private Instance findInstanceByName(String name) {
+        if (name == null) return null;
+        for (Instance instance : launcher.getInstances().getInstances()) {
+            if (name.equals(instance.getName())) {
+                return instance;
+            }
+        }
+        return null;
     }
 
     private static class LaunchListenerImpl implements LaunchListener {

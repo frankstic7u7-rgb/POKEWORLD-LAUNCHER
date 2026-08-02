@@ -25,6 +25,7 @@ public class Configuration {
 
     private boolean offlineEnabled = true;
     private String lastUsername;
+    private String selectedPack = "pokeworld";
     private JavaRuntime javaRuntime;
     private String jvmArgs;
     private int minMemory = 1024;
