@@ -10,14 +10,14 @@ application {
 
 repositories {
     maven {
-        name = 'bbkr.space maven'
-        url = 'https://server.bbkr.space/artifactory/libs-snapshot'
+        name = 'jitpack'
+        url = 'https://jitpack.io'
     }
 }
 
 dependencies {
     implementation project(path: ':launcher')
-    implementation 'io.github.cottonmc.insubstantial:substance:7.3.1-SNAPSHOT'
+    implementation 'com.github.insubstantial:substance:7.3'
 }
 
 shadowJar {

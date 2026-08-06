@@ -8,6 +8,7 @@ package com.skcraft.launcher;
 
 import com.google.common.base.Supplier;
 import com.skcraft.launcher.swing.SwingHelper;
+import com.skcraft.launcher.util.SharedLocale;
 import lombok.extern.java.Log;
 
 import javax.swing.*;
@@ -40,9 +41,9 @@ public class FancyLauncher {
                     launcher.setMainWindowSupplier(new CustomWindowSupplier(launcher));
                     launcher.showLauncherWindow();
                 } catch (Throwable t) {
-                    log.log(Level.WARNING, "Load failure", t);
-                    SwingHelper.showErrorDialog(null, "Uh oh! The updater couldn't be opened because a " +
-                            "problem was encountered.", "Launcher error", t);
+                    log.log(Level.WARNING, SharedLocale.tr("launcher.startupFailureLog"), t);
+                    SwingHelper.showErrorDialog(null, SharedLocale.tr("launcher.startupFailureError"),
+                            SharedLocale.tr("errorTitle"), t);
                 }
             }
         });

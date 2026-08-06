@@ -4,4 +4,4 @@ plugins {
 
 rootProject.name = 'launcher-parent'
 
-include 'launcher', 'launcher-builder', 'launcher-bootstrap', 'creator-tools'
+include 'launcher', 'launcher-builder', 'launcher-bootstrap', 'launcher-fancy', 'creator-tools'
