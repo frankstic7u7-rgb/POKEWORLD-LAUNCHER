@@ -1,7 +1,7 @@
 {
-  "title": "PokeWorld (Lite)",
+  "title": "PokeWorld Lite",
   "name": "pokeworld_lite",
-  "version": "19",
+  "version": "20",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -38,6 +38,14 @@
       "location": "31/81/31810186ebd3287f09a41b3e525c5164a7700045",
       "to": "mods/InventoryParticles-2.6.0+1.21.1+fabric.jar",
       "size": 1718560,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "7a7d5546db421639cd89b7807e9bb6def176cf89",
+      "location": "7a/7d/7a7d5546db421639cd89b7807e9bb6def176cf89",
+      "to": "mods/jei-1.21.1-fabric-19.27.0.340.jar",
+      "size": 1561711,
       "userFile": false
     },
     {
