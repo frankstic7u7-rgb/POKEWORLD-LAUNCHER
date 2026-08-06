@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld",
   "name": "pokeworld",
-  "version": "14",
+  "version": "16",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -22,14 +22,6 @@
       "location": "65/f4/65f4e8b9dcbad6697b2fb32fa0bb937ec5efcd84",
       "to": "mods/fabric-api-0.116.11+1.21.1.jar",
       "size": 2426356,
-      "userFile": false
-    },
-    {
-      "type": "file",
-      "hash": "6bb450d69c2fc8edd206010b1146bb0916215fd5",
-      "location": "6b/b4/6bb450d69c2fc8edd206010b1146bb0916215fd5",
-      "to": "mods/fancymenu_fabric_3.9.9_MC_1.21.1.jar",
-      "size": 26257186,
       "userFile": false
     },
     {
