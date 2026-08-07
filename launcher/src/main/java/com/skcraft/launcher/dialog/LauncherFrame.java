@@ -388,7 +388,8 @@ public class LauncherFrame extends JFrame {
     private JPanel createButtonColumn() {
         JPanel column = new JPanel();
         column.setOpaque(false);
-        column.setLayout(new MigLayout("insets 6, gap 12", "[]", "[][][]push"));
+        // Ajuste fino: los 3 botones (Discord/Opciones/Jugar) 2px a la derecha.
+        column.setLayout(new MigLayout("insets 6 8 6 6, gap 12", "[]", "[][][]push"));
 
         styleThemedButton(discordButton, "btn_discord.png", 240, 129, 0.63);
         styleThemedButton(optionsButton, "btn_options.png", 240, 140, 0.65);
