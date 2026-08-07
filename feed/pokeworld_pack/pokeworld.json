@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld",
   "name": "pokeworld",
-  "version": "23",
+  "version": "26",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -98,18 +98,18 @@
     },
     {
       "type": "file",
-      "hash": "37e634c1f0f82e0f9f41588bb9b29d0263dc1681",
-      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/37e634c1f0f82e0f9f41588bb9b29d0263dc1681",
+      "hash": "519f9f2160ab3f2dde12c9d97466eb4b9385bd6a",
+      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/519f9f2160ab3f2dde12c9d97466eb4b9385bd6a",
       "to": "mods/pokeworld_pro.jar",
-      "size": 106855858,
+      "size": 105210071,
       "userFile": false
     },
     {
       "type": "file",
-      "hash": "b8a30a2c69f1e7afd7d5f22b8ee3cac7688815c0",
-      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/b8a30a2c69f1e7afd7d5f22b8ee3cac7688815c0",
+      "hash": "4ed91bb1788a3425d227d353b43f643dbfa4f415",
+      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/4ed91bb1788a3425d227d353b43f643dbfa4f415",
       "to": "resourcepacks/PokeWorld-ResourcePack.zip",
-      "size": 93249899,
+      "size": 98433885,
       "userFile": false
     }
   ],
