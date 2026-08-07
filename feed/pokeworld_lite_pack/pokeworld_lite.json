@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld Lite",
   "name": "pokeworld_lite",
-  "version": "22",
+  "version": "24",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -102,6 +102,14 @@
       "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/200dac45abbdb7514e29db1af9a7f602503d8d35",
       "to": "mods/pokeworld_lite.jar",
       "size": 96530663,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "b8a30a2c69f1e7afd7d5f22b8ee3cac7688815c0",
+      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/b8a30a2c69f1e7afd7d5f22b8ee3cac7688815c0",
+      "to": "resourcepacks/PokeWorld-ResourcePack.zip",
+      "size": 93249899,
       "userFile": false
     }
   ],
