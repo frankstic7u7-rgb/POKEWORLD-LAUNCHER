@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld",
   "name": "pokeworld",
-  "version": "36",
+  "version": "37",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -1874,7 +1874,12 @@
   "loaders": {},
   "launch": {
     "flags": [
-      "-Djava.util.concurrent.ForkJoinPool.common.parallelism=3"
+      "-Djava.util.concurrent.ForkJoinPool.common.parallelism=3",
+      "-XX:+UseG1GC",
+      "-XX:+ParallelRefProcEnabled",
+      "-XX:MaxGCPauseMillis=200",
+      "-XX:+UseStringDeduplication",
+      "-XX:SoftRefLRUPolicyMSPerMB=0"
     ]
   }
 }
