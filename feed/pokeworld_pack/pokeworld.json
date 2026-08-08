@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld",
   "name": "pokeworld",
-  "version": "32",
+  "version": "33",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -110,14 +110,6 @@
       "location": "98/af/98af413ae69735b8e2a2e7831933eb625478af59",
       "to": "mods/pwcustommenu-1.0.0.jar",
       "size": 41400,
-      "userFile": false
-    },
-    {
-      "type": "file",
-      "hash": "973e20afc60fdaf62161dea0088bd20a3689d014",
-      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/973e20afc60fdaf62161dea0088bd20a3689d014",
-      "to": "resourcepacks/PokeWorld-ResourcePack.zip",
-      "size": 98367079,
       "userFile": false
     }
   ],
