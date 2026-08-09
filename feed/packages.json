@@ -4,14 +4,14 @@
         {
             "name": "pokeworld",
             "title": "PokeWorld (Pro)",
-            "version": "41",
+            "version": "42",
             "location": "pokeworld_pack/pokeworld.json",
             "priority": 1
         },
         {
             "name": "pokeworld_lite",
             "title": "PokeWorld (Lite)",
-            "version": "42",
+            "version": "43",
             "location": "pokeworld_lite_pack/pokeworld_lite.json",
             "priority": 2
         }
