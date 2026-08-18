@@ -4,7 +4,7 @@
         {
             "name": "pokeworld",
             "title": "PokeWorld (Pro)",
-            "version": "86",
+            "version": "87",
             "location": "pokeworld_pack/pokeworld.json",
             "priority": 1
         },
