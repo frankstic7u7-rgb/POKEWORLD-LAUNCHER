@@ -10,11 +10,11 @@
   "tasks": [
     {
       "type": "file",
-      "hash": "da82de8aa849c80dbf7806c768b2095efce9b97a",
-      "location": "da/82/da82de8aa849c80dbf7806c768b2095efce9b97a",
-      "to": "shaderpacks/ComplementaryShaders.zip",
-      "size": 1524540,
-      "userFile": false
+      "hash": "05c598629e0a9c0c26dacbb08d7bb9cd68e718b2",
+      "location": "05/c5/05c598629e0a9c0c26dacbb08d7bb9cd68e718b2",
+      "to": "options.txt",
+      "size": 130,
+      "userFile": true
     },
     {
       "type": "file",
