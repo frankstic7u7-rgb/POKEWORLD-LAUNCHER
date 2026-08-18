@@ -122,10 +122,10 @@
     },
     {
       "type": "file",
-      "hash": "f761e6f3136cd7c08e094a81a657680fcf0ba234",
-      "location": "https://github.com/frankstic7u7-rgb/POKEWORLD-LAUNCHER/releases/download/assets-v1/f761e6f3136cd7c08e094a81a657680fcf0ba234",
+      "hash": "561e290c2f636bda3c3fd9b59fc13b7ad91c0b86",
+      "location": "https://download.mc-packs.net/pack/561e290c2f636bda3c3fd9b59fc13b7ad91c0b86.zip",
       "to": "resourcepacks/PokeWorld-ResourcePack.zip",
-      "size": 35350482,
+      "size": 89312994,
       "userFile": false
     }
   ],
