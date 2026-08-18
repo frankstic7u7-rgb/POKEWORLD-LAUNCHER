@@ -11,7 +11,7 @@
         {
             "name": "pokeworld_lite",
             "title": "PokeWorld (Lite)",
-            "version": "88",
+            "version": "89",
             "location": "pokeworld_lite_pack/pokeworld_lite.json",
             "priority": 2
         }
