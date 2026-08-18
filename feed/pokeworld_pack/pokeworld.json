@@ -10,22 +10,6 @@
   "tasks": [
     {
       "type": "file",
-      "hash": "4e0df4011503b4b36ba69877ea7247c1a47fea00",
-      "location": "4e/0d/4e0df4011503b4b36ba69877ea7247c1a47fea00",
-      "to": "mods/iris-fabric-1.8.8.jar",
-      "size": 2690177,
-      "userFile": false
-    },
-    {
-      "type": "file",
-      "hash": "70381d969eb63c0aa09dc581ef4b9a79782c0123",
-      "location": "70/38/70381d969eb63c0aa09dc581ef4b9a79782c0123",
-      "to": "mods/sodium-fabric-0.8.12.jar",
-      "size": 1573180,
-      "userFile": false
-    },
-    {
-      "type": "file",
       "hash": "da82de8aa849c80dbf7806c768b2095efce9b97a",
       "location": "da/82/da82de8aa849c80dbf7806c768b2095efce9b97a",
       "to": "shaderpacks/ComplementaryShaders.zip",
