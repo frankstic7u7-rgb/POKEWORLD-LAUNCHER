@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld (Lite)",
   "name": "pokeworld_lite",
-  "version": "77",
+  "version": "78",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -114,10 +114,10 @@
     },
     {
       "type": "file",
-      "hash": "21a16208a24ed7f7be948721f1319ba75b33b819",
-      "location": "21/a1/21a16208a24ed7f7be948721f1319ba75b33b819",
+      "hash": "83ee33a7b31d8c55c16f77bdda2e749eed963e33",
+      "location": "83/ee/83ee33a7b31d8c55c16f77bdda2e749eed963e33",
       "to": "mods/pwcustommenu-1.0.0.jar",
-      "size": 6345833,
+      "size": 6347088,
       "userFile": false
     },
     {
