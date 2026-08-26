@@ -46,6 +46,12 @@ public class DialogTheme {
         } else if (c instanceof JTextField || c instanceof JSpinner || c instanceof JComboBox) {
             c.setBackground(BG_FIELD);
             c.setForeground(TEXT);
+            if (c instanceof JTextField) {
+                // Sin esto el caret queda en el negro por defecto del Look
+                // and Feel -- invisible contra el fondo morado oscuro de
+                // BG_FIELD (pedido explicito: "falta el palito" al escribir).
+                ((JTextField) c).setCaretColor(TEXT);
+            }
             if (c instanceof JComponent) {
                 ((JComponent) c).setBorder(BorderFactory.createLineBorder(BORDER));
             }

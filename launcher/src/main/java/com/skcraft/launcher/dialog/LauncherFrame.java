@@ -394,10 +394,12 @@ public class LauncherFrame extends JFrame {
         styleThemedButton(discordButton, "btn_discord.png", 240, 129, 0.63);
         styleThemedButton(optionsButton, "btn_options.png", 240, 140, 0.65);
         styleThemedButton(launchButton, "btn_play.png", 260, 121, 0.69);
-        // Ajuste fino: en Discord y Jugar el texto quedaba 1px corrido a la
-        // izquierda del centro real de la placa (no es simetrica pixel a pixel).
-        discordButton.putClientProperty("textXOffset", 1);
-        launchButton.putClientProperty("textXOffset", 1);
+        // Ajuste fino: el texto de los 3 quedaba corrido a la izquierda del
+        // centro real de la placa (no es simetrica pixel a pixel) -- pedido
+        // explicito del usuario, "un poquito mas a la derecha, bien centrados".
+        discordButton.putClientProperty("textXOffset", 3);
+        optionsButton.putClientProperty("textXOffset", 3);
+        launchButton.putClientProperty("textXOffset", 3);
 
         column.add(discordButton, "wrap, align center");
         column.add(optionsButton, "wrap, align center");
