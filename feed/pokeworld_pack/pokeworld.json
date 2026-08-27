@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld",
   "name": "pokeworld",
-  "version": "87",
+  "version": "88",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -114,10 +114,10 @@
     },
     {
       "type": "file",
-      "hash": "6f12072737df8a1587fd558178991682561490ad",
-      "location": "6f/12/6f12072737df8a1587fd558178991682561490ad",
+      "hash": "af4c45722a61b1872e3e7a25cddd1dea257d5d08",
+      "location": "af/4c/af4c45722a61b1872e3e7a25cddd1dea257d5d08",
       "to": "mods/pwcustommenu-1.0.0.jar",
-      "size": 6368555,
+      "size": 6368549,
       "userFile": false
     },
     {
