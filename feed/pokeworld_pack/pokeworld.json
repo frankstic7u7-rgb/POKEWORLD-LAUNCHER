@@ -1,7 +1,7 @@
 {
   "title": "PokeWorld",
   "name": "pokeworld",
-  "version": "84",
+  "version": "85",
   "minimumVersion": 3,
   "librariesLocation": "libraries",
   "objectsLocation": "objects",
@@ -114,10 +114,10 @@
     },
     {
       "type": "file",
-      "hash": "24f7ba12876adee47e5b4b724d91cfcc3b376d02",
-      "location": "24/f7/24f7ba12876adee47e5b4b724d91cfcc3b376d02",
+      "hash": "377cd3dd9cb981988b9fe40f313ff7a91f8bd168",
+      "location": "37/7c/377cd3dd9cb981988b9fe40f313ff7a91f8bd168",
       "to": "mods/pwcustommenu-1.0.0.jar",
-      "size": 6358334,
+      "size": 6365122,
       "userFile": false
     },
     {
@@ -126,6 +126,38 @@
       "location": "https://download.mc-packs.net/pack/561e290c2f636bda3c3fd9b59fc13b7ad91c0b86.zip",
       "to": "resourcepacks/PokeWorld-ResourcePack.zip",
       "size": 89312994,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "9293ef9b2626ae3180625c003290a838879cc0b4",
+      "location": "92/93/9293ef9b2626ae3180625c003290a838879cc0b4",
+      "to": "mods/xaerominimap-fabric-1.21.1-26.4.2.jar",
+      "size": 2233608,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "9872f1275b6e491bc0a806b6288ae2320261b36a",
+      "location": "98/72/9872f1275b6e491bc0a806b6288ae2320261b36a",
+      "to": "mods/xaeroworldmap-fabric-1.21.1-1.44.2.jar",
+      "size": 1448218,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "de09f45b29b264432b80d34bb0c336bd552fb9ee",
+      "location": "de/09/de09f45b29b264432b80d34bb0c336bd552fb9ee",
+      "to": "config/xaero/minimap/common.cfg",
+      "size": 147,
+      "userFile": false
+    },
+    {
+      "type": "file",
+      "hash": "95aac2d16be0b72a83619fb6e3b6e2cda88e9ab8",
+      "location": "95/aa/95aac2d16be0b72a83619fb6e3b6e2cda88e9ab8",
+      "to": "config/xaero/minimap/server_profiles/default.cfg",
+      "size": 136,
       "userFile": false
     }
   ],
